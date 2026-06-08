@@ -83,6 +83,9 @@ export default function Home() {
               Découvre les schémas inconscients qui sabotent ton pouvoir.
             </span>
           </h1>
+          <p className="text-white/50 text-base sm:text-lg">
+            Ces 6 situations vont révéler comment tu fonctionnes intérieurement — pas ce que les femmes font ou ne font pas.
+          </p>
           <button
             onClick={() => setStep({ name: "quiz", index: 0 })}
             className="inline-block px-10 py-4 bg-white text-black font-medium tracking-wide rounded-full hover:bg-white/90 transition"
