@@ -78,14 +78,11 @@ export default function Home() {
       <Centered>
         <div className="max-w-xl text-center space-y-8">
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-tight">
-            Pourquoi te perds-tu dans tes relations ?
+            Pourquoi te perds-tu dans tes relations ?{" "}
+            <span className="text-white/70">
+              Découvre les schémas inconscients qui sabotent ton pouvoir.
+            </span>
           </h1>
-          <p className="text-lg sm:text-xl text-white/70">
-            Découvre les schémas inconscients qui sabotent ton pouvoir.
-          </p>
-          <p className="text-sm text-white/40">
-            Tu recevras ton diagnostic complet par email.
-          </p>
           <button
             onClick={() => setStep({ name: "quiz", index: 0 })}
             className="inline-block px-10 py-4 bg-white text-black font-medium tracking-wide rounded-full hover:bg-white/90 transition"
