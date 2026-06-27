@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import QuizCard from '@/app/components/QuizCard';
+import ContactForm from '@/app/components/ContactForm';
 import { QUIZ_METADATA, QUIZ_QUESTIONS } from '@/lib/quiz-data';
 
 export default function Home() {
@@ -10,6 +11,8 @@ export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   useEffect(() => {
     // Initialize answers array
@@ -34,6 +37,16 @@ export default function Home() {
       setCurrentQuestion(currentQuestion - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const handleContactSubmit = (data: { firstName: string; email: string; whatsapp: string }) => {
+    setIsLoading(true);
+    // Save contact info to localStorage
+    localStorage.setItem('contactInfo', JSON.stringify(data));
+    // Redirect to results
+    setTimeout(() => {
+      router.push(`/result/${profileId}`);
+    }, 500);
   };
 
   const handleSubmit = async () => {
@@ -76,8 +89,10 @@ export default function Home() {
     localStorage.setItem('quizAnswers', JSON.stringify(answers));
     localStorage.setItem('quizProfile', profile);
 
-    // Redirect to results
-    router.push(`/result/${profile}`);
+    // Show contact form
+    setProfileId(profile);
+    setShowContactForm(true);
+    setIsLoading(false);
   };
 
   const isAnswered = answers[currentQuestion - 1] !== null && answers[currentQuestion - 1] !== undefined;
@@ -86,6 +101,16 @@ export default function Home() {
 
   if (answers.length === 0) {
     return null; // Loading
+  }
+
+  if (showContactForm && profileId) {
+    return (
+      <ContactForm
+        profileId={profileId}
+        onSubmit={handleContactSubmit}
+        isLoading={isLoading}
+      />
+    );
   }
 
   return (
