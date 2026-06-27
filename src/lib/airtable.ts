@@ -31,7 +31,7 @@ export async function createLead(input: {
 }): Promise<string> {
   const table = getTable();
   const fields: Partial<FieldSet> = {
-    Prénom: input.firstName,
+    Name: input.firstName,
     Email: input.email,
     Mobile: input.mobile,
     Date: new Date().toISOString(),
@@ -50,7 +50,7 @@ export async function listLeads(): Promise<Lead[]> {
   const records = await table.select({ sort: [{ field: "Date", direction: "desc" }] }).all();
   return records.map((record) => ({
     id: record.id,
-    firstName: (record.get("Prénom") as string) || "",
+    firstName: (record.get("Name") as string) || "",
     email: (record.get("Email") as string) || "",
     mobile: (record.get("Mobile") as string) || "",
     date: (record.get("Date") as string) || "",
