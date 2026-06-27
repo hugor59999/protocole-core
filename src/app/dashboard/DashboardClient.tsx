@@ -157,7 +157,7 @@ export default function DashboardClient() {
                         {lead.mobile}
                       </button>
                     ) : (
-                      <span className="text-white/30">—</span>
+                      <span className="text-white/30"></span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-white/50">{formatDate(lead.date)}</td>
@@ -198,9 +198,9 @@ function Counter({ label, value }: { label: string; value: number }) {
 }
 
 function formatDate(iso: string) {
-  if (!iso) return "—";
+  if (!iso) return "";
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) return "";
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
@@ -247,7 +247,7 @@ function LeadModal({
           {SCENARIOS.map((scenario, i) => (
             <div key={i} className="space-y-1">
               <p className="text-sm text-white/40">{scenario}</p>
-              <p className="text-white/80">{lead.answers[i] || "—"}</p>
+              <p className="text-white/80">{lead.answers[i] || ""}</p>
             </div>
           ))}
         </div>

@@ -35,7 +35,7 @@ export default function ResultCard({ profile }: ResultCardProps) {
       {/* CTA */}
       <div className="text-center mb-8">
         <p className="text-gray-600 mb-6">
-          Ce schéma a une origine précise — et il peut se dissoudre. Si tu veux comprendre d'où il
+          Ce schéma a une origine précise  et il peut se dissoudre. Si tu veux comprendre d'où il
           vient et comment en sortir, je t'ai préparé quelque chose :
         </p>
         <a
