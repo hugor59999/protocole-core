@@ -68,7 +68,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     question: 'Si tu regardes tes 3 dernières relations, qu\'est-ce qui se répète ?',
     options: [
       { letter: 'A', text: 'Tu t\'attaches à des personnes émotionnellement peu disponibles ou distantes' },
-      { letter: 'B', text: 'Tu commences fort puis tu te retrouves seul  tu t\'es éloigné sans vraiment savoir pourquoi' },
+      { letter: 'B', text: 'Tu t\'investis au départ mais tu finis toujours par créer une distance et te retrouver seul' },
       { letter: 'C', text: 'Tu t\'approches, tu te retires, tu reviens  tu oscilles entre envie de fusionner et envie de fuir' },
       { letter: 'D', text: 'Tu t\'investis à fond, tu te fais avoir, et ça finit toujours de la même façon' },
     ],

@@ -23,7 +23,7 @@ export default function Home() {
   };
 
   const handleNext = () => {
-    if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
+    if (currentQuestion < QUIZ_QUESTIONS.length) {
       setCurrentQuestion(currentQuestion + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
