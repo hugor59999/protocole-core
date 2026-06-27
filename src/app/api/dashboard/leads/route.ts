@@ -31,3 +31,4 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Erreur lors de la mise à jour" }, { status: 500 });
   }
 }
+// rebuild 1782591408
