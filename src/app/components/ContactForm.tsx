@@ -15,7 +15,7 @@ export default function ContactForm({ profileId, onSubmit, isLoading }: ContactF
   const [whatsapp, setWhatsapp] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -35,12 +35,30 @@ export default function ContactForm({ profileId, onSubmit, isLoading }: ContactF
     }
 
     const fullWhatsapp = `${countryCode}${whatsapp.replace(/\s/g, '')}`;
-
-    onSubmit({
+    const contactData = {
       firstName: firstName.trim(),
       email: email.trim(),
       whatsapp: fullWhatsapp,
-    });
+    };
+
+    try {
+      // Save to Supabase
+      const res = await fetch('/api/quiz/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...contactData,
+          profile: profileId,
+          answers: JSON.parse(localStorage.getItem('quizAnswers') || '[]'),
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to save');
+
+      onSubmit(contactData);
+    } catch (err) {
+      setError((err as any).message || 'Erreur lors de la sauvegarde');
+    }
   };
 
   return (
