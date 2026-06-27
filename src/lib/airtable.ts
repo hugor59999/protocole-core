@@ -19,7 +19,7 @@ function getTable() {
   const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
     process.env.AIRTABLE_BASE_ID as string
   );
-  return base("Leads");
+  return base("Diagnostics");
 }
 
 export async function createLead(input: {
