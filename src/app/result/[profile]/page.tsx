@@ -37,7 +37,7 @@ export default function ResultPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Profil non trouvé</h1>
           <a
-            href="/quiz"
+            href="/"
             className="text-gray-600 hover:text-gray-900 font-medium underline"
           >
             Revenir au quiz
