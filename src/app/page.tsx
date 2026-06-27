@@ -18,7 +18,7 @@ export default function Home() {
 
   const handleSelectAnswer = (letter: string) => {
     const newAnswers = [...answers];
-    newAnswers[currentQuestion] = letter;
+    newAnswers[currentQuestion - 1] = letter;
     setAnswers(newAnswers);
   };
 
@@ -80,9 +80,9 @@ export default function Home() {
     router.push(`/result/${profile}`);
   };
 
-  const isAnswered = answers[currentQuestion] !== null && answers[currentQuestion] !== undefined;
+  const isAnswered = answers[currentQuestion - 1] !== null && answers[currentQuestion - 1] !== undefined;
   const isAllAnswered = answers.every((a) => a !== null && a !== undefined);
-  const progress = ((currentQuestion + 1) / QUIZ_QUESTIONS.length) * 100;
+  const progress = (currentQuestion / QUIZ_QUESTIONS.length) * 100;
 
   if (answers.length === 0) {
     return null; // Loading
