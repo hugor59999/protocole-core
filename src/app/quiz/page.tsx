@@ -89,49 +89,61 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-12">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-8 md:py-12">
+      {/* Background accent */}
+      <div className="fixed inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto">
         {currentQuestion === 0 && (
           <div className="w-full max-w-2xl mx-auto px-4 mb-12 text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{QUIZ_METADATA.title}</h1>
-            <p className="text-lg text-gray-700 mb-6">{QUIZ_METADATA.subtitle}</p>
-            <p className="text-gray-600 italic mb-8">{QUIZ_METADATA.promise}</p>
-            <button
-              onClick={() => setCurrentQuestion(1)}
-              className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-            >
-              Commencer le quiz →
-            </button>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
+              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                {QUIZ_METADATA.title}
+              </h1>
+              <p className="text-base md:text-lg text-gray-200 mb-6">{QUIZ_METADATA.subtitle}</p>
+              <p className="text-gray-300 italic mb-8 text-sm md:text-base">{QUIZ_METADATA.promise}</p>
+              <button
+                onClick={() => setCurrentQuestion(1)}
+                className="bg-white text-gray-900 px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block w-full md:w-auto"
+              >
+                Commencer le quiz →
+              </button>
+            </div>
           </div>
         )}
 
         {currentQuestion > 0 && (
-          <QuizCard
-            question={QUIZ_QUESTIONS[currentQuestion - 1]}
-            selectedAnswer={answers[currentQuestion - 1]}
-            onSelectAnswer={handleSelectAnswer}
-            progress={progress}
-          />
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20">
+            <QuizCard
+              question={QUIZ_QUESTIONS[currentQuestion - 1]}
+              selectedAnswer={answers[currentQuestion - 1]}
+              onSelectAnswer={handleSelectAnswer}
+              progress={progress}
+            />
+          </div>
         )}
 
         {/* Navigation */}
         {currentQuestion > 0 && (
-          <div className="flex justify-between items-center gap-4 mt-12 max-w-2xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 mt-8 md:mt-12 max-w-2xl mx-auto px-4">
             <button
               onClick={handlePrevious}
               disabled={currentQuestion === 1}
-              className="px-6 py-2 text-gray-700 font-medium rounded-lg border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full md:w-auto px-6 py-2 text-white font-medium rounded-lg border border-white/30 hover:border-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               ← Précédent
             </button>
 
-            <div className="flex-1"></div>
+            <div className="hidden md:flex-1"></div>
 
             {currentQuestion < QUIZ_QUESTIONS.length ? (
               <button
                 onClick={handleNext}
                 disabled={!isAnswered}
-                className="px-6 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full md:w-auto px-6 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Suivant →
               </button>
@@ -139,7 +151,7 @@ export default function QuizPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!isAllAnswered || isLoading}
-                className="px-8 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full md:w-auto px-8 py-2 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Chargement...' : 'Voir mon diagnostic'}
               </button>
