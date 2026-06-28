@@ -61,13 +61,8 @@ export default function ContactForm({ profileId, onSubmit, isLoading }: ContactF
         throw new Error(data.error || 'Failed to save');
       }
 
-      // Show success message
+      // Show success message (don't redirect)
       setShowSuccess(true);
-
-      // Wait 2 seconds then redirect
-      setTimeout(() => {
-        onSubmit(contactData);
-      }, 2000);
     } catch (err) {
       setError((err as any).message || 'Erreur lors de la sauvegarde');
       setFormLoading(false);
