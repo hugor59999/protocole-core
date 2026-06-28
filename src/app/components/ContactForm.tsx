@@ -61,6 +61,19 @@ export default function ContactForm({ profileId, onSubmit, isLoading }: ContactF
         throw new Error(data.error || 'Failed to save');
       }
 
+      // Send via WhatsApp (fire and forget - don't block on this)
+      fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: fullWhatsapp,
+          firstName: firstName.trim(),
+          profile: profileId,
+        }),
+      }).catch((err) => {
+        console.error('WhatsApp send failed:', err);
+      });
+
       // Show success message (don't redirect)
       setShowSuccess(true);
     } catch (err) {
