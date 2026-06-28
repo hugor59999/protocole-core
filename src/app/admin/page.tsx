@@ -12,64 +12,40 @@ interface QuizResult {
 }
 
 export default function AdminPage() {
-  const [password, setPassword] = useState('');
-  const [isAuthed, setIsAuthed] = useState(false);
   const [results, setResults] = useState<QuizResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const res = await fetch('/api/admin/results');
+        if (!res.ok) throw new Error('Failed to fetch results');
 
-    try {
-      const res = await fetch(`/api/admin/results?password=${encodeURIComponent(password)}`);
-      if (!res.ok) throw new Error('Mot de passe incorrect');
+        const data = await res.json();
+        setResults(data.results || []);
+      } catch (err) {
+        setError((err as any).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      const data = await res.json();
-      setResults(data.results || []);
-      setIsAuthed(true);
-    } catch (err) {
-      setError((err as any).message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchResults();
+  }, []);
 
-  if (!isAuthed) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12">
-        <div className="fixed inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="text-white text-xl">Chargement...</div>
+      </div>
+    );
+  }
 
-        <div className="relative z-10 max-w-md mx-auto px-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-            <h1 className="text-3xl font-bold text-white mb-6">Admin Dashboard</h1>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mot de passe"
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white/50"
-              />
-
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-white text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-              >
-                {isLoading ? 'Chargement...' : 'Accès'}
-              </button>
-            </form>
-          </div>
-        </div>
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="text-red-400 text-xl">{error}</div>
       </div>
     );
   }

@@ -5,17 +5,6 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function GET(request: Request) {
   try {
-    // Check password
-    const { searchParams } = new URL(request.url);
-    const password = searchParams.get('password');
-    const adminPassword = process.env.ADMIN_PASSWORD || '';
-
-    if (!password || password !== adminPassword) {
-      return Response.json(
-        { error: 'Unauthorized', debug: { provided: !!password, expected: !!adminPassword } },
-        { status: 401 }
-      );
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
