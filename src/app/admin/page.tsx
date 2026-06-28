@@ -15,6 +15,28 @@ export default function AdminPage() {
   const [results, setResults] = useState<QuizResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Supprimer ce lead?')) return;
+
+    setDeletingId(id);
+    try {
+      const res = await fetch('/api/admin/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!res.ok) throw new Error('Failed to delete');
+
+      setResults(results.filter((r) => r.id !== id));
+    } catch (err) {
+      alert('Erreur: ' + ((err as any).message || 'Failed to delete'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -73,6 +95,7 @@ export default function AdminPage() {
                   <th className="px-6 py-4 text-left text-white font-semibold">WhatsApp</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">Profil</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">Date</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -94,6 +117,15 @@ export default function AdminPage() {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleDelete(result.id)}
+                        disabled={deletingId === result.id}
+                        className="px-3 py-1 bg-red-500/20 border border-red-400/30 rounded text-red-300 hover:bg-red-500/30 disabled:opacity-50 transition text-sm"
+                      >
+                        {deletingId === result.id ? '...' : '🗑️'}
+                      </button>
                     </td>
                   </tr>
                 ))}
