@@ -143,6 +143,7 @@ Génère maintenant le diagnostic personnalisé pour ce prospect.`;
           first_name: firstName,
           whatsapp,
           email: null,
+          profile: null,
           answers: JSON.stringify(answers),
           diagnosis,
           created_at: new Date().toISOString(),
