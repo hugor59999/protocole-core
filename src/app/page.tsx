@@ -1,188 +1,212 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import QuizCard from '@/app/components/QuizCard';
-import ContactForm from '@/app/components/ContactForm';
-import { QUIZ_METADATA, QUIZ_QUESTIONS } from '@/lib/quiz-data';
+import { useState } from 'react';
+
+const QUIZ_QUESTIONS = [
+  'Depuis la rupture, ce qui t\'occupe le plus c\'est :',
+  'Ce qui fait le plus mal dans cette rupture c\'est :',
+  'Depuis la rupture, ton comportement ressemble plutôt à :',
+  'Si tu regardes tes relations passées, cette douleur-là :',
+  'Si tu regardes tes 3 dernières relations, qu\'est-ce qui se répète ?',
+  'La phrase qui te touche le plus profondément :',
+  'Au fond, ce que tu cherches vraiment à comprendre c\'est :',
+];
 
 export default function Home() {
-  const router = useRouter();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>(new Array(7).fill(''));
+  const [firstName, setFirstName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [showCollection, setShowCollection] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [profileId, setProfileId] = useState<string | null>(null);
-  const [showContactForm, setShowContactForm] = useState(false);
 
-  useEffect(() => {
-    // Initialize answers array
-    setAnswers(new Array(QUIZ_QUESTIONS.length).fill(null));
-  }, []);
-
-  const handleSelectAnswer = (letter: string) => {
+  const handleAnswerChange = (text: string) => {
     const newAnswers = [...answers];
-    newAnswers[currentQuestion - 1] = letter;
+    newAnswers[currentQuestion] = text;
     setAnswers(newAnswers);
   };
 
   const handleNext = () => {
-    if (currentQuestion < QUIZ_QUESTIONS.length) {
+    if (currentQuestion < 6) {
       setCurrentQuestion(currentQuestion + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setShowCollection(true);
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrev = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
-
-  const handleContactSubmit = (data: { firstName: string; email: string; whatsapp: string }) => {
-    setIsLoading(true);
-    // Save contact info to localStorage
-    localStorage.setItem('contactInfo', JSON.stringify(data));
-    // Redirect to results
-    setTimeout(() => {
-      router.push(`/result/${profileId}`);
-    }, 500);
   };
 
   const handleSubmit = async () => {
-    if (answers.some((a) => a === null)) {
-      alert('Veuillez répondre à toutes les questions');
+    if (!firstName.trim() || !whatsapp.trim()) {
+      alert('Prénom et numéro WhatsApp requis');
       return;
     }
 
     setIsLoading(true);
+    try {
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          whatsapp: whatsapp.trim(),
+          answers,
+        }),
+      });
 
-    // Calculate profile
-    const letterCounts = {
-      A: 0,
-      B: 0,
-      C: 0,
-      D: 0,
-    };
-
-    answers.forEach((answer) => {
-      if (answer && answer in letterCounts) {
-        letterCounts[answer as keyof typeof letterCounts]++;
-      }
-    });
-
-    // Determine profile based on majority
-    let profile = 'anxious';
-    const maxCount = Math.max(
-      letterCounts.A,
-      letterCounts.B,
-      letterCounts.C,
-      letterCounts.D
-    );
-
-    if (letterCounts.A === maxCount) profile = 'anxious';
-    else if (letterCounts.B === maxCount) profile = 'distant';
-    else if (letterCounts.C === maxCount) profile = 'disorganized';
-    else if (letterCounts.D === maxCount) profile = 'disconnected';
-
-    // Save answers to localStorage
-    localStorage.setItem('quizAnswers', JSON.stringify(answers));
-    localStorage.setItem('quizProfile', profile);
-
-    // Show contact form
-    setProfileId(profile);
-    setShowContactForm(true);
-    setIsLoading(false);
+      if (!res.ok) throw new Error('Erreur');
+      setShowConfirmation(true);
+    } catch (err) {
+      alert('Erreur: ' + (err as any).message);
+      setIsLoading(false);
+    }
   };
 
-  const isAnswered = answers[currentQuestion - 1] !== null && answers[currentQuestion - 1] !== undefined;
-  const isAllAnswered = answers.every((a) => a !== null && a !== undefined);
-  const progress = (currentQuestion / QUIZ_QUESTIONS.length) * 100;
-
-  if (answers.length === 0) {
-    return null; // Loading
-  }
-
-  if (showContactForm && profileId) {
+  // Confirmation screen
+  if (showConfirmation) {
     return (
-      <ContactForm
-        profileId={profileId}
-        onSubmit={handleContactSubmit}
-        isLoading={isLoading}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="fixed inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative z-10 max-w-2xl mx-auto px-4 text-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
+            <div className="text-5xl mb-6">✅</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">C'est tout bon!</h2>
+            <p className="text-xl text-gray-300">
+              Ton analyse arrive sur WhatsApp<br />
+              <span className="text-lg text-gray-400">dans quelques minutes...</span>
+            </p>
+          </div>
+        </div>
+      </div>
     );
   }
 
+  // Collection screen
+  if (showCollection) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-8 md:py-12">
+        <div className="fixed inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative z-10 max-w-2xl mx-auto px-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Une dernière étape</h2>
+            <p className="text-gray-300 mb-8">avant de recevoir ton analyse</p>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-white font-medium mb-2">Ton prénom</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Ex: Hugo"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-white font-medium mb-2">
+                  Ton numéro WhatsApp
+                  <span className="block text-sm text-gray-400 font-normal mt-1">
+                    📱 Tu recevras ton analyse ici
+                  </span>
+                </label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="+33 6 12 34 56 78"
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white/50"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowCollection(false);
+                    setCurrentQuestion(6);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition"
+                >
+                  ← Retour
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 disabled:opacity-50 transition"
+                >
+                  {isLoading ? 'Envoi...' : 'Valider'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Quiz screen
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-8 md:py-12">
-      {/* Background accent */}
       <div className="fixed inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto">
-        {currentQuestion === 0 && (
-          <div className="w-full max-w-2xl mx-auto px-4 mb-12 text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
-              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                {QUIZ_METADATA.title}
-              </h1>
-              <p className="text-base md:text-lg text-gray-200 mb-6">{QUIZ_METADATA.subtitle}</p>
-              <p className="text-gray-300 italic mb-8 text-sm md:text-base">{QUIZ_METADATA.promise}</p>
-              <button
-                onClick={() => setCurrentQuestion(1)}
-                className="bg-white text-gray-900 px-8 py-3 md:py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block w-full md:w-auto"
-              >
-                Commencer le quiz →
-              </button>
-            </div>
+      <div className="relative z-10 max-w-2xl mx-auto px-4">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-400">Question {currentQuestion + 1} sur 7</span>
+            <span className="text-gray-400">
+              {Math.round(((currentQuestion + 1) / 7) * 100)}%
+            </span>
           </div>
-        )}
-
-        {currentQuestion > 0 && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20">
-            <QuizCard
-              question={QUIZ_QUESTIONS[currentQuestion - 1]}
-              selectedAnswer={answers[currentQuestion - 1]}
-              onSelectAnswer={handleSelectAnswer}
-              progress={progress}
-            />
+          <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+              style={{ width: `${((currentQuestion + 1) / 7) * 100}%` }}
+            ></div>
           </div>
-        )}
+        </div>
 
-        {/* Navigation */}
-        {currentQuestion > 0 && (
-          <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 mt-8 md:mt-12 max-w-2xl mx-auto px-4">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            {QUIZ_QUESTIONS[currentQuestion]}
+          </h2>
+
+          <textarea
+            value={answers[currentQuestion]}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            placeholder="Réponds en détail..."
+            className="w-full h-32 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white/50 resize-none"
+          ></textarea>
+
+          <div className="flex gap-3 mt-8">
             <button
-              onClick={handlePrevious}
-              disabled={currentQuestion === 1}
-              className="w-full md:w-auto px-6 py-2 text-white font-medium rounded-lg border border-white/30 hover:border-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              onClick={handlePrev}
+              disabled={currentQuestion === 0}
+              className="px-6 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 disabled:opacity-30 transition"
             >
               ← Précédent
             </button>
-
-            <div className="hidden md:flex-1"></div>
-
-            {currentQuestion < QUIZ_QUESTIONS.length ? (
-              <button
-                onClick={handleNext}
-                disabled={!isAnswered}
-                className="w-full md:w-auto px-6 py-2 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                Suivant →
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={!isAllAnswered || isLoading}
-                className="w-full md:w-auto px-8 py-2 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                {isLoading ? 'Chargement...' : 'Voir mon diagnostic'}
-              </button>
-            )}
+            <button
+              onClick={handleNext}
+              className="flex-1 px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 transition"
+            >
+              Suivant →
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
