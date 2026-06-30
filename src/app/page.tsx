@@ -3,13 +3,13 @@
 import { useState } from 'react';
 
 const QUIZ_QUESTIONS = [
-  'Depuis la rupture, ce qui t\'occupe le plus c\'est :',
-  'Ce qui fait le plus mal dans cette rupture c\'est :',
-  'Depuis la rupture, ton comportement ressemble plutôt à :',
-  'Si tu regardes tes relations passées, cette douleur-là :',
-  'Si tu regardes tes 3 dernières relations, qu\'est-ce qui se répète ?',
-  'La phrase qui te touche le plus profondément :',
-  'Au fond, ce que tu cherches vraiment à comprendre c\'est :',
+  'Décris en quelques mots ce qui se passe dans ta tête depuis la rupture. Qu\'est-ce qui revient le plus ?',
+  'Qu\'est-ce qui fait vraiment mal là-dedans ? Pas le résumé — ce qui te réveille la nuit ou te pèse le matin.',
+  'Depuis la rupture, concrètement, qu\'est-ce que tu as fait ? Qu\'est-ce que tu t\'es interdit de faire ?',
+  'Ce sentiment de douleur, l\'as-tu déjà vécu dans d\'autres relations ?',
+  'Dans tes 3 dernières relations, quel est le pattern exact qui se rejoue ?',
+  'Si tu devais nommer ce que tu ressens en un mot ou une phrase, ce serait quoi ?',
+  'Ce que tu aimerais vraiment aujourd\'hui au fond de toi, c\'est :',
 ];
 
 export default function Home() {
@@ -28,6 +28,10 @@ export default function Home() {
   };
 
   const handleNext = () => {
+    if (!answers[currentQuestion].trim()) {
+      alert('Veuillez répondre avant de continuer');
+      return;
+    }
     if (currentQuestion < 6) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
@@ -201,7 +205,8 @@ export default function Home() {
             </button>
             <button
               onClick={handleNext}
-              className="flex-1 px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 transition"
+              disabled={!answers[currentQuestion].trim()}
+              className="flex-1 px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               Suivant →
             </button>
