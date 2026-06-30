@@ -15,7 +15,6 @@ export async function sendDiagnosisViaWhatsApp(
     // Format phone number for Twilio (keep + and digits only)
     const formattedPhone = phoneNumber.replace(/\D/g, '');
     const toNumber = `whatsapp:+${formattedPhone}`;
-    const fromNumber = 'whatsapp:+14155238886'; // Twilio Sandbox number
 
     const message = `Salut ${firstName}! 👋\n\nTon diagnostic: ${profile}\n\nVa sur le lien pour voir les détails complets.`;
 
@@ -30,7 +29,7 @@ export async function sendDiagnosisViaWhatsApp(
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          From: fromNumber,
+          From: 'whatsapp:+14155238886',
           To: toNumber,
           Body: message,
         }).toString(),
