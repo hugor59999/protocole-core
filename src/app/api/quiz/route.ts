@@ -159,17 +159,9 @@ Génère maintenant le diagnostic personnalisé pour ce prospect.`;
       );
     }
 
-    // Send via WhatsApp AFTER saving
-    const whatsappSent = await sendViaWhatsApp(whatsapp, diagnosis);
-
-    if (!whatsappSent) {
-      console.error('WhatsApp send failed for:', whatsapp);
-      // Still return success since data was saved
-    }
-
     return Response.json({
       success: true,
-      message: 'Diagnosis saved and sent',
+      diagnosis,
     });
   } catch (err) {
     console.error('Quiz error:', err);

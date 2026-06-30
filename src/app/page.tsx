@@ -19,6 +19,7 @@ export default function Home() {
   const [whatsapp, setWhatsapp] = useState('');
   const [showCollection, setShowCollection] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [diagnosis, setDiagnosis] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAnswerChange = (text: string) => {
@@ -67,6 +68,9 @@ export default function Home() {
         const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `Server error: ${res.status}`);
       }
+
+      const data = await res.json();
+      setDiagnosis(data.diagnosis);
       setShowConfirmation(true);
     } catch (err) {
       alert('Erreur: ' + (err as any).message);
@@ -74,22 +78,31 @@ export default function Home() {
     }
   };
 
-  // Confirmation screen
+  // Confirmation screen with diagnosis
   if (showConfirmation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12">
         <div className="fixed inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative z-10 max-w-2xl mx-auto px-4 text-center">
+        <div className="relative z-10 max-w-4xl mx-auto px-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/20">
-            <div className="text-5xl mb-6">✅</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">C'est tout bon!</h2>
-            <p className="text-xl text-gray-300">
-              Ton analyse arrive sur WhatsApp<br />
-              <span className="text-lg text-gray-400">dans quelques minutes...</span>
-            </p>
+            <div className="text-center mb-8">
+              <div className="text-5xl mb-4">✅</div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Ton analyse</h2>
+              <p className="text-gray-300">Sauvegardée et en route sur WhatsApp</p>
+            </div>
+
+            <div className="bg-white/5 border border-blue-400/30 rounded-lg p-6 md:p-8">
+              <p className="text-white leading-relaxed whitespace-pre-wrap font-light">
+                {diagnosis}
+              </p>
+            </div>
+
+            <div className="mt-8 text-center text-gray-400 text-sm">
+              <p>Numéro reçu: {whatsapp}</p>
+            </div>
           </div>
         </div>
       </div>
