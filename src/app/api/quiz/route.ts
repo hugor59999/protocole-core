@@ -131,10 +131,7 @@ Génère maintenant le diagnostic personnalisé pour ce prospect.`;
       );
     }
 
-    // Send via WhatsApp
-    await sendViaWhatsApp(whatsapp, diagnosis);
-
-    // Save to Supabase
+    // Save to Supabase FIRST
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -153,11 +150,23 @@ Génère maintenant le diagnostic personnalisé pour ce prospect.`;
 
     if (dbError) {
       console.error('Database error:', dbError);
+      return Response.json(
+        { error: 'Failed to save to database: ' + dbError.message },
+        { status: 500 }
+      );
+    }
+
+    // Send via WhatsApp AFTER saving
+    const whatsappSent = await sendViaWhatsApp(whatsapp, diagnosis);
+
+    if (!whatsappSent) {
+      console.error('WhatsApp send failed for:', whatsapp);
+      // Still return success since data was saved
     }
 
     return Response.json({
       success: true,
-      message: 'Diagnosis sent',
+      message: 'Diagnosis saved and sent',
     });
   } catch (err) {
     console.error('Quiz error:', err);
