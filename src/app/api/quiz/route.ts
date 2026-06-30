@@ -12,15 +12,16 @@ async function sendViaWhatsApp(
   try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const whatsappFromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
-    if (!accountSid || !authToken) {
+    if (!accountSid || !authToken || !whatsappFromNumber) {
       console.log('Twilio credentials not configured');
       return false;
     }
 
     const formattedPhone = phoneNumber.replace(/\D/g, '');
     const toNumber = `whatsapp:+${formattedPhone}`;
-    const fromNumber = 'whatsapp:+14155238886';
+    const fromNumber = whatsappFromNumber;
 
     const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
