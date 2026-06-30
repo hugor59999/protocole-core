@@ -8,6 +8,8 @@ interface QuizResult {
   email: string;
   whatsapp: string;
   profile: string;
+  answers: string;
+  diagnosis: string;
   created_at: string;
 }
 
@@ -16,6 +18,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedResult, setSelectedResult] = useState<QuizResult | null>(null);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Supprimer ce lead?')) return;
@@ -72,6 +75,72 @@ export default function AdminPage() {
     );
   }
 
+  // Modal for details
+  if (selectedResult) {
+    const answers = JSON.parse(selectedResult.answers);
+    const questions = [
+      'Ce qui se passe depuis la rupture',
+      'Ce qui fait le plus mal',
+      'Comportement depuis la rupture',
+      'Ce que tu as déjà vécu de similaire',
+      'Ce qui se répète dans tes relations',
+      'La phrase qui te touche le plus',
+      'Ce que tu cherches vraiment à comprendre',
+    ];
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto w-full">
+          <div className="sticky top-0 bg-gray-900/95 border-b border-white/20 p-6 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-white">{selectedResult.first_name}</h2>
+            <button
+              onClick={() => setSelectedResult(null)}
+              className="text-white text-2xl hover:text-gray-300"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="p-6 space-y-8">
+            {/* Réponses */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Réponses du prospect</h3>
+              <div className="space-y-4">
+                {questions.map((q, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <p className="text-sm text-gray-400 mb-2">Q{i + 1}: {q}</p>
+                    <p className="text-white">{answers[i]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Diagnostic */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Diagnostic IA</h3>
+              <div className="bg-white/5 border border-blue-400/30 rounded-lg p-6">
+                <p className="text-white leading-relaxed whitespace-pre-wrap">
+                  {selectedResult.diagnosis}
+                </p>
+              </div>
+            </div>
+
+            {/* Infos */}
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
+              <p className="text-gray-400">
+                <span className="text-white font-medium">WhatsApp:</span> {selectedResult.whatsapp}
+              </p>
+              <p className="text-gray-400">
+                <span className="text-white font-medium">Date:</span>{' '}
+                {new Date(selectedResult.created_at).toLocaleDateString('fr-FR')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12">
       <div className="fixed inset-0 opacity-10 pointer-events-none">
@@ -91,32 +160,31 @@ export default function AdminPage() {
               <thead>
                 <tr className="border-b border-white/20 bg-white/5">
                   <th className="px-6 py-4 text-left text-white font-semibold">Prénom</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Email</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">WhatsApp</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Profil</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">Date</th>
-                  <th className="px-6 py-4 text-left text-white font-semibold">Action</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Détails</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Supprimer</th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((result) => (
                   <tr key={result.id} className="border-b border-white/10 hover:bg-white/5 transition">
                     <td className="px-6 py-4 text-gray-200">{result.first_name}</td>
-                    <td className="px-6 py-4 text-gray-200">{result.email}</td>
-                    <td className="px-6 py-4 text-gray-200">{result.whatsapp}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-200 text-sm">
-                        {result.profile}
-                      </span>
-                    </td>
+                    <td className="px-6 py-4 text-gray-200 text-sm">{result.whatsapp}</td>
                     <td className="px-6 py-4 text-gray-400 text-sm">
                       {new Date(result.created_at).toLocaleDateString('fr-FR', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
                       })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => setSelectedResult(result)}
+                        className="px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded text-blue-300 hover:bg-blue-500/30 transition text-sm"
+                      >
+                        👁️ Voir
+                      </button>
                     </td>
                     <td className="px-6 py-4">
                       <button

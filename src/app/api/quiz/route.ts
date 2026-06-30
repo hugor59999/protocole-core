@@ -1,4 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -132,6 +133,27 @@ Génère maintenant le diagnostic personnalisé pour ce prospect.`;
 
     // Send via WhatsApp
     await sendViaWhatsApp(whatsapp, diagnosis);
+
+    // Save to Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { error: dbError } = await supabase
+      .from('quiz_results')
+      .insert([
+        {
+          first_name: firstName,
+          whatsapp,
+          answers: JSON.stringify(answers),
+          diagnosis,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+    if (dbError) {
+      console.error('Database error:', dbError);
+    }
 
     return Response.json({
       success: true,
