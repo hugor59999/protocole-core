@@ -1,3 +1,5 @@
+import { QUIZ_PROFILES } from './quiz-data';
+
 export async function sendDiagnosisViaWhatsApp(
   phoneNumber: string,
   firstName: string,
@@ -16,7 +18,20 @@ export async function sendDiagnosisViaWhatsApp(
     const formattedPhone = phoneNumber.replace(/\D/g, '');
     const toNumber = `whatsapp:+${formattedPhone}`;
 
-    const message = `Salut ${firstName}! 👋\n\nTon diagnostic: ${profile}\n\nVa sur le lien pour voir les détails complets.`;
+    // Get profile details
+    const profileData = QUIZ_PROFILES[profile as keyof typeof QUIZ_PROFILES];
+
+    const message = `Salut ${firstName}! 👋
+
+*${profileData?.title || profile}*
+
+${profileData?.subtitle || ''}
+
+${profileData?.description || 'Merci d\'avoir fait le test.'}
+
+*Ce dont tu as besoin:*
+${profileData?.need || ''}`;
+
 
     const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 
