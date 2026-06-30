@@ -63,7 +63,10 @@ export default function Home() {
         }),
       });
 
-      if (!res.ok) throw new Error('Erreur');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Server error: ${res.status}`);
+      }
       setShowConfirmation(true);
     } catch (err) {
       alert('Erreur: ' + (err as any).message);
