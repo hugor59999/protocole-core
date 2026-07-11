@@ -21,10 +21,8 @@ export async function POST(request: Request) {
         {
           first_name: firstName,
           whatsapp,
-          email: null,
           profile,
           answers: JSON.stringify(answers),
-          diagnosis: null,
           created_at: new Date().toISOString(),
         },
       ]);
