@@ -219,6 +219,20 @@ export default function Home() {
               </p>
             </div>
 
+            <div className="mb-8">
+              <a
+                href="https://calendly.com/hugo-rf/appel-decouverte-core?utm_source=quiz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-4 px-6 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold text-lg text-center transition transform hover:scale-105"
+              >
+                📅 Prendre un rendez-vous pour explorer
+              </a>
+              <p className="text-center text-gray-400 text-sm mt-3">
+                Un appel de découverte pour comprendre ton profil et les prochaines étapes
+              </p>
+            </div>
+
             <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-2">
               <p className="text-gray-400">
                 <span className="text-white font-medium">Prénom:</span> {firstName}
