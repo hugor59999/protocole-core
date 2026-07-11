@@ -13,6 +13,23 @@ interface QuizResult {
   created_at: string;
 }
 
+const QUIZ_QUESTIONS = [
+  'Tes relations importantes ont tendance à :',
+  'Quand une relation commence à se fragiliser, qu\'est-ce qui se passe en toi en premier ?',
+  'Quelqu\'un que tu apprécies ne répond plus pendant 48h. Qu\'est-ce qui se passe vraiment ?',
+  'Si tu regardes tes relations significatives, qu\'est-ce qui se répète ?',
+  'En repensant à ton enfance, comment décrirais-tu ce que tu as appris sur l\'amour ?',
+  'La phrase qui te touche le plus profondément :',
+  'Au fond, ce que tu cherches vraiment à comprendre c\'est :',
+];
+
+const PROFILE_LABELS: Record<string, string> = {
+  A: 'L\'ANXIEUX MASQUÉ',
+  B: 'LE DISTANT MALGRÉ LUI',
+  C: 'LE DÉSORGANISÉ',
+  D: 'LE COUPÉ',
+};
+
 export default function AdminPage() {
   const [results, setResults] = useState<QuizResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,21 +95,16 @@ export default function AdminPage() {
   // Modal for details
   if (selectedResult) {
     const answers = JSON.parse(selectedResult.answers);
-    const questions = [
-      'Ce qui se passe depuis la rupture',
-      'Ce qui fait le plus mal',
-      'Comportement depuis la rupture',
-      'Ce que tu as déjà vécu de similaire',
-      'Ce qui se répète dans tes relations',
-      'La phrase qui te touche le plus',
-      'Ce que tu cherches vraiment à comprendre',
-    ];
+    const profileLabel = PROFILE_LABELS[selectedResult.profile] || selectedResult.profile;
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl border border-white/20 max-w-4xl max-h-[90vh] overflow-y-auto w-full">
           <div className="sticky top-0 bg-gray-900/95 border-b border-white/20 p-6 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-white">{selectedResult.first_name}</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-white">{selectedResult.first_name}</h2>
+              <p className="text-blue-400 text-sm mt-1">{profileLabel}</p>
+            </div>
             <button
               onClick={() => setSelectedResult(null)}
               className="text-white text-2xl hover:text-gray-300"
@@ -102,26 +114,24 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6 space-y-8">
+            {/* Profil */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Profil détecté</h3>
+              <div className="bg-white/5 border border-blue-400/30 rounded-lg p-4">
+                <p className="text-blue-300 font-medium">{profileLabel}</p>
+              </div>
+            </div>
+
             {/* Réponses */}
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Réponses du prospect</h3>
               <div className="space-y-4">
-                {questions.map((q, i) => (
+                {QUIZ_QUESTIONS.map((q, i) => (
                   <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-4">
                     <p className="text-sm text-gray-400 mb-2">Q{i + 1}: {q}</p>
-                    <p className="text-white">{answers[i]}</p>
+                    <p className="text-white font-semibold text-lg">{answers[i]}</p>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Diagnostic */}
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Diagnostic IA</h3>
-              <div className="bg-white/5 border border-blue-400/30 rounded-lg p-6">
-                <p className="text-white leading-relaxed whitespace-pre-wrap">
-                  {selectedResult.diagnosis}
-                </p>
               </div>
             </div>
 
@@ -150,7 +160,7 @@ export default function AdminPage() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Dashboard Admin</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Dashboard Quiz</h1>
           <p className="text-gray-300">{results.length} résultats</p>
         </div>
 
@@ -160,6 +170,7 @@ export default function AdminPage() {
               <thead>
                 <tr className="border-b border-white/20 bg-white/5">
                   <th className="px-6 py-4 text-left text-white font-semibold">Prénom</th>
+                  <th className="px-6 py-4 text-left text-white font-semibold">Profil</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">WhatsApp</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">Date</th>
                   <th className="px-6 py-4 text-left text-white font-semibold">Détails</th>
@@ -170,6 +181,9 @@ export default function AdminPage() {
                 {results.map((result) => (
                   <tr key={result.id} className="border-b border-white/10 hover:bg-white/5 transition">
                     <td className="px-6 py-4 text-gray-200">{result.first_name}</td>
+                    <td className="px-6 py-4 text-blue-300 text-sm">
+                      {PROFILE_LABELS[result.profile] || result.profile}
+                    </td>
                     <td className="px-6 py-4 text-gray-200 text-sm">{result.whatsapp}</td>
                     <td className="px-6 py-4 text-gray-400 text-sm">
                       {new Date(result.created_at).toLocaleDateString('fr-FR', {
@@ -205,4 +219,3 @@ export default function AdminPage() {
     </div>
   );
 }
-// rebuild
