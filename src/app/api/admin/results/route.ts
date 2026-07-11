@@ -5,6 +5,12 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export async function GET(request: Request) {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      return Response.json(
+        { error: 'Supabase environment variables not configured' },
+        { status: 500 }
+      );
+    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
