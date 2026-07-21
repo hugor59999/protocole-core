@@ -1,8 +1,3 @@
-'use client';
-
-import { promises as fs } from 'fs';
-import path from 'path';
-
 export async function POST(request: Request) {
   try {
     const { firstName, whatsapp, answers, profile } = await request.json();
