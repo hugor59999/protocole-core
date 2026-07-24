@@ -10,16 +10,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store in memory (persists for the deployment duration)
     const quizData = {
+      id: Date.now(),
       first_name: firstName,
       whatsapp,
       profile,
-      answers,
+      answers: JSON.stringify(answers),
       created_at: new Date().toISOString(),
     };
 
-    // Log to console (will show in Vercel logs)
+    // Log to console
     console.log('Quiz submission:', quizData);
 
     return Response.json({

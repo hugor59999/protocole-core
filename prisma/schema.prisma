@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model QuizResult {
+  id        Int     @id @default(autoincrement())
+  firstName String
+  whatsapp  String
+  profile   String
+  answers   String
+  createdAt DateTime @default(now())
+}

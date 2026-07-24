@@ -1,8 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();
@@ -14,18 +9,10 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { error } = await supabase
-      .from('quiz_results')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-
+    // Delete endpoint not available with in-memory storage
     return Response.json({
       success: true,
-      message: 'Lead deleted'
+      message: 'Quiz submissions are logged only. Delete not available.'
     });
   } catch (err) {
     console.error('Delete error:', err);
