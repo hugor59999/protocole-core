@@ -19,7 +19,7 @@ function getTable() {
   const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
     process.env.AIRTABLE_BASE_ID as string
   );
-  return base("Diagnostics");
+  return base("Leads");
 }
 
 export async function createLead(input: {
@@ -31,7 +31,7 @@ export async function createLead(input: {
 }): Promise<string> {
   const table = getTable();
   const fields: Partial<FieldSet> = {
-    Name: input.firstName,
+    Prénom: input.firstName,
     Email: input.email,
     Mobile: input.mobile,
     Date: new Date().toISOString(),
@@ -50,7 +50,7 @@ export async function listLeads(): Promise<Lead[]> {
   const records = await table.select({ sort: [{ field: "Date", direction: "desc" }] }).all();
   return records.map((record) => ({
     id: record.id,
-    firstName: (record.get("Name") as string) || "",
+    firstName: (record.get("Prénom") as string) || "",
     email: (record.get("Email") as string) || "",
     mobile: (record.get("Mobile") as string) || "",
     date: (record.get("Date") as string) || "",
