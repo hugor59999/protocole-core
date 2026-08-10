@@ -35,10 +35,11 @@ export default function DashboardPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password) {
+    if (password.trim()) {
       document.cookie = `dashboard_auth=${password}; path=/; max-age=86400`;
       setIsAuthed(true);
       setPassword('');
+      setError('');
       fetchLeads();
     }
   };
@@ -84,10 +85,14 @@ export default function DashboardPage() {
         if (res.ok) {
           setIsAuthed(true);
           fetchLeads();
+        } else if (res.status === 401) {
+          setIsLoading(false);
         } else {
+          setError('Failed to check authentication');
           setIsLoading(false);
         }
-      } catch {
+      } catch (err) {
+        setError('Error checking authentication');
         setIsLoading(false);
       }
     };

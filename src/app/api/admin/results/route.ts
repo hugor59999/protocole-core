@@ -1,5 +1,5 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
-import { listLeads } from '@/lib/airtable';
+import { getAllLeads } from '@/lib/storage';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -11,7 +11,7 @@ export async function GET() {
   }
 
   try {
-    const leads = await listLeads();
+    const leads = await getAllLeads();
     return Response.json({
       success: true,
       leads: leads.map((l) => ({

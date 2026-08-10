@@ -1,12 +1,5 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
-import Airtable from 'airtable';
-
-function getTable() {
-  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
-    process.env.AIRTABLE_BASE_ID as string
-  );
-  return base('Leads');
-}
+import { deleteLead } from '@/lib/storage';
 
 export async function DELETE(request: Request) {
   const isAuthed = await isDashboardAuthed();
@@ -27,8 +20,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const table = getTable();
-    await table.destroy(id);
+    await deleteLead(id);
 
     return Response.json({
       success: true,
