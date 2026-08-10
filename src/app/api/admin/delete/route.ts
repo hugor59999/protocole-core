@@ -1,3 +1,5 @@
+import { deleteLead } from '@/lib/storage';
+
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();
@@ -9,15 +11,16 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete endpoint not available with in-memory storage
+    await deleteLead(id);
+
     return Response.json({
       success: true,
-      message: 'Quiz submissions are logged only. Delete not available.'
+      message: 'Lead deleted successfully'
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Delete error:', err);
     return Response.json(
-      { error: (err as any).message || 'Failed to delete' },
+      { error: err.message || 'Failed to delete' },
       { status: 500 }
     );
   }

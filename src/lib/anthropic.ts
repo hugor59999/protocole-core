@@ -30,6 +30,10 @@ Règles absolues :
 - Termine par une phrase naturelle qui l'invite à aller plus loin avec Hugo`;
 
 export async function generateDiagnosis(answers: string[]): Promise<string> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return getDemodiagnosis();
+  }
+
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const userContent = SCENARIOS.map(
@@ -50,4 +54,18 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
 
   const block = message.content[0];
   return block.type === "text" ? block.text : "";
+}
+
+function getDemodiagnosis(): string {
+  return `**Ton style d'attachement : Anxieux avec tendances désorganisées**
+
+Ce que tu ressens, c'est de l'anxiété relationnelle profonde. Tu t'abandonnes dans tes relations parce que tu cherches en priorité la validation externe, pas parce que tu es "faible". C'est une stratégie apprise : quelque part dans ton enfance, l'amour n'était pas constant. Il était conditionnel, imprévisible.
+
+**La blessure qui l'alimente**
+
+Tu as probablement grandi avec un manque de sécurité émotionnelle. Peut-être un parent absent, ou au contraire trop présent et instable. Ton système nerveux a appris que "moins je montre qui je suis, moins je souffre". Mais paradoxalement, tu te jettes dans les relations en espérant que quelqu'un d'autre va te valider ce que tu ne peux pas te donner à toi-même.
+
+**Ce que ça révèle sur toi**
+
+Le vrai travail c'est là : retrouver la confiance en ta propre valeur. Pas grâce à une femme. Grâce à toi. Actuellement, tu donnes ton pouvoir à l'autre. C'est épuisant pour vous deux.`;
 }
