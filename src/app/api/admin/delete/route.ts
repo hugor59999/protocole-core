@@ -1,3 +1,4 @@
+import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import Airtable from 'airtable';
 
 function getTable() {
@@ -8,6 +9,14 @@ function getTable() {
 }
 
 export async function DELETE(request: Request) {
+  const isAuthed = await isDashboardAuthed();
+  if (!isAuthed) {
+    return Response.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     const { id } = await request.json();
 

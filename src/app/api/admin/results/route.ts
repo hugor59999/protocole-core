@@ -1,6 +1,15 @@
+import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { listLeads } from '@/lib/airtable';
 
 export async function GET() {
+  const isAuthed = await isDashboardAuthed();
+  if (!isAuthed) {
+    return Response.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     const leads = await listLeads();
     return Response.json({

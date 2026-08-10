@@ -80,7 +80,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/admin/results');
+        const res = await fetch('/api/admin/check-auth');
         if (res.ok) {
           setIsAuthed(true);
           fetchLeads();
