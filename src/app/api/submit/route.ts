@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addLead } from "@/lib/storage";
+import { createLead } from "@/lib/airtable";
 import { sendDiagnosisEmail } from "@/lib/email";
 import { SCENARIOS } from "@/lib/scenarios";
 
@@ -21,13 +21,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await addLead({
+    await createLead({
       firstName: firstName.trim(),
       email: email.trim(),
       mobile: typeof mobile === "string" ? mobile.trim() : "",
       answers,
       diagnosis,
-      date: new Date().toISOString(),
     });
 
     await sendDiagnosisEmail({ to: email.trim(), firstName: firstName.trim(), diagnosis });

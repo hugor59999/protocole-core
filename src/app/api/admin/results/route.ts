@@ -1,8 +1,8 @@
-import { getAllLeads } from '@/lib/storage';
+import { listLeads } from '@/lib/airtable';
 
 export async function GET() {
   try {
-    const leads = await getAllLeads();
+    const leads = await listLeads();
     return Response.json({
       success: true,
       leads: leads.map((l) => ({

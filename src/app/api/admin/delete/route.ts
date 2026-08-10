@@ -1,4 +1,11 @@
-import { deleteLead } from '@/lib/storage';
+import Airtable from 'airtable';
+
+function getTable() {
+  const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
+    process.env.AIRTABLE_BASE_ID as string
+  );
+  return base('Leads');
+}
 
 export async function DELETE(request: Request) {
   try {
@@ -11,7 +18,8 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await deleteLead(id);
+    const table = getTable();
+    await table.destroy(id);
 
     return Response.json({
       success: true,

@@ -78,8 +78,21 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    setIsAuthed(true);
-    fetchLeads();
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/admin/results');
+        if (res.ok) {
+          setIsAuthed(true);
+          fetchLeads();
+        } else {
+          setIsLoading(false);
+        }
+      } catch {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   if (isLoading) {
