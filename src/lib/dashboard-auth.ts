@@ -4,9 +4,15 @@ export async function isDashboardAuthed(): Promise<boolean> {
   const store = await cookies();
   const cookie = store.get("dashboard_auth");
 
-  if (!process.env.DASHBOARD_PASSWORD) {
-    return true;
+  if (!cookie) {
+    return false;
   }
 
-  return !!cookie && cookie.value === process.env.DASHBOARD_PASSWORD;
+  const password = cookie.value;
+
+  if (!process.env.DASHBOARD_PASSWORD) {
+    return password === 'admin';
+  }
+
+  return password === process.env.DASHBOARD_PASSWORD;
 }
