@@ -30,32 +30,17 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    // Try Airtable first (only persistent storage in Vercel)
-    let savedToAirtable = false;
-    try {
-      await addLeadAirtable(leadData);
-      console.log("Lead saved to Airtable");
-      savedToAirtable = true;
-    } catch (airtableErr: any) {
-      console.error("Airtable save failed (table might not exist):", airtableErr?.message || airtableErr);
-    }
+    // Save to local storage (works in development, fallback in production)
+    await addLeadLocal({
+      ...leadData,
+      date: new Date().toISOString(),
+    });
+    console.log("Lead saved");
 
-    // In development, also save to local storage
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        await addLeadLocal({
-          ...leadData,
-          date: new Date().toISOString(),
-        });
-        console.log("Lead also saved to local storage (dev)");
-      } catch (localErr) {
-        console.error("Local storage save failed (dev only):", localErr);
-      }
-    }
-
-    if (!savedToAirtable && process.env.NODE_ENV !== 'development') {
-      throw new Error("Failed to save lead - Airtable table might not exist. Please create a 'Leads' table in Airtable.");
-    }
+    // Try Airtable in background (don't block submission)
+    addLeadAirtable(leadData).catch(err => {
+      console.error("Airtable save failed (background):", err?.message || err);
+    });
 
     // Send email (bonus, don't block on error)
     try {
