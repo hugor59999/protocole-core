@@ -1,6 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { getAllLeads as getAllLeadsLocal } from '@/lib/storage';
-import { getLeadsGitHub } from '@/lib/github-storage';
+import { listLeads as getLeadsAirtable } from '@/lib/airtable';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -14,12 +14,12 @@ export async function GET() {
   try {
     let leads: any[] = [];
 
-    // Try GitHub storage first (production)
+    // Try Airtable first (production)
     try {
-      leads = await getLeadsGitHub();
-      console.log("Leads fetched from GitHub Issues:", leads.length);
-    } catch (ghErr) {
-      console.error("GitHub storage not available, trying local storage:", ghErr);
+      leads = await getLeadsAirtable();
+      console.log("Leads fetched from Airtable:", leads.length);
+    } catch (airtableErr: any) {
+      console.error("Airtable fetch failed:", airtableErr?.message, "trying local storage");
       // Fallback to local storage (development)
       try {
         leads = await getAllLeadsLocal();

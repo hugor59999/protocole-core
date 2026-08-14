@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addLead as addLeadLocal } from "@/lib/storage";
-import { addLeadGitHub } from "@/lib/github-storage";
+import { createLead as addLeadAirtable } from "@/lib/airtable";
 import { sendDiagnosisEmail } from "@/lib/email";
 import { sendLeadToTelegram } from "@/lib/telegram-storage";
 import { SCENARIOS } from "@/lib/scenarios";
@@ -36,12 +36,12 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     };
 
-    // Try GitHub storage first (production - uses repo that exists)
+    // Try Airtable first (production)
     try {
-      await addLeadGitHub(lead);
-      console.log("Lead saved to GitHub Issues");
-    } catch (ghErr) {
-      console.error("GitHub storage not available, using local storage:", ghErr);
+      await addLeadAirtable(leadData);
+      console.log("Lead saved to Airtable");
+    } catch (airtableErr: any) {
+      console.error("Airtable save failed:", airtableErr?.message);
       // Fallback to local storage (development)
       try {
         await addLeadLocal(lead);
