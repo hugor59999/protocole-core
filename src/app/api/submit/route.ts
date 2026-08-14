@@ -59,13 +59,41 @@ export async function POST(req: NextRequest) {
       console.error("[SUBMIT] Email send error:", emailErr);
     }
 
-    // Send to Telegram (permanent backup)
-    console.log("[SUBMIT] Sending to Telegram...");
-    sendLeadToTelegram(lead).then(() => {
-      console.log("[SUBMIT] Telegram send completed successfully");
-    }).catch(err => {
-      console.error("[SUBMIT] Telegram send failed:", err.message, err.stack);
-    });
+    // Send to Telegram DIRECTLY (bypass sendLeadToTelegram function)
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    if (token && chatId) {
+      console.log("[SUBMIT] Sending to Telegram - token exists:", !!token, "chatId:", chatId);
+
+      // Part 1: Info
+      const infoPart = `NEW LEAD\n\nName: ${firstName}\nEmail: ${email}\nPhone: ${mobile}\nTime: ${lead.date}`;
+
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: infoPart,
+        }),
+      }).then(r => r.json()).then(d => {
+        console.log("[SUBMIT] Telegram Info sent, ok:", d.ok);
+
+        // Part 2: Diagnosis
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `DIAGNOSIS:\n\n${diagnosis.substring(0, 3000)}`,
+          }),
+        }).then(r => r.json()).then(d => {
+          console.log("[SUBMIT] Telegram Diagnosis sent, ok:", d.ok);
+        });
+      });
+    } else {
+      console.error("[SUBMIT] Telegram credentials missing - token:", !!token, "chatId:", !!chatId);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
