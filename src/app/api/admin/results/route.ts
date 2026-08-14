@@ -1,5 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
-import { getAllLeads } from '@/lib/storage';
+import { getAllLeads as getAllLeadsLocal } from '@/lib/storage';
+import { listLeads as listLeadsAirtable } from '@/lib/airtable';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -11,7 +12,19 @@ export async function GET() {
   }
 
   try {
-    const leads = await getAllLeads();
+    let leads: any[] = [];
+
+    // Try Airtable first (production)
+    try {
+      leads = await listLeadsAirtable();
+      console.log("Leads fetched from Airtable:", leads.length);
+    } catch (airtableErr) {
+      console.error("Airtable fetch failed, trying local storage:", airtableErr);
+      // Fallback to local storage
+      leads = await getAllLeadsLocal();
+      console.log("Leads fetched from local storage:", leads.length);
+    }
+
     return Response.json({
       success: true,
       leads: leads.map((l) => ({

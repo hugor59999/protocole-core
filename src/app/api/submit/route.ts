@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addLead } from "@/lib/storage";
+import { addLead as addLeadLocal } from "@/lib/storage";
+import { createLead as addLeadAirtable } from "@/lib/airtable";
 import { sendDiagnosisEmail } from "@/lib/email";
 import { SCENARIOS } from "@/lib/scenarios";
 
@@ -20,16 +21,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Champs invalides" }, { status: 400 });
   }
 
-  try {
-    await addLead({
-      firstName: firstName.trim(),
-      email: email.trim(),
-      mobile: typeof mobile === "string" ? mobile.trim() : "",
-      answers,
-      diagnosis,
-      date: new Date().toISOString(),
-    });
+  const leadData = {
+    firstName: firstName.trim(),
+    email: email.trim(),
+    mobile: typeof mobile === "string" ? mobile.trim() : "",
+    answers,
+    diagnosis,
+  };
 
+  try {
+    // Try Airtable first (production)
+    try {
+      await addLeadAirtable(leadData);
+      console.log("Lead saved to Airtable");
+    } catch (airtableErr) {
+      console.error("Airtable save failed, trying local storage:", airtableErr);
+      // Fallback to local storage
+      await addLeadLocal({
+        ...leadData,
+        date: new Date().toISOString(),
+      });
+      console.log("Lead saved to local storage");
+    }
+
+    // Send email (bonus, don't block on error)
     try {
       await sendDiagnosisEmail({ to: email.trim(), firstName: firstName.trim(), diagnosis });
     } catch (emailErr) {
