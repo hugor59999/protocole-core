@@ -35,29 +35,41 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     };
 
+    console.log("[SUBMIT] Received lead submission:", {
+      firstName: lead.firstName,
+      email: lead.email,
+      mobile: lead.mobile,
+      answersLength: lead.answers.length,
+      hasQuiz: !!lead.diagnosis,
+    });
+
     // Save locally (dev only)
     try {
       await addLeadLocal(lead);
-      console.log("Lead saved to local storage (dev)");
+      console.log("[SUBMIT] Lead saved to local storage");
     } catch (localErr) {
-      console.error("Local storage save failed:", localErr);
+      console.error("[SUBMIT] Local storage save failed:", localErr);
     }
 
     // Send email (bonus, don't block on error)
     try {
       await sendDiagnosisEmail({ to: email.trim(), firstName: firstName.trim(), diagnosis });
+      console.log("[SUBMIT] Email sent to:", email.trim());
     } catch (emailErr) {
-      console.error("Email send error (lead saved anyway):", emailErr);
+      console.error("[SUBMIT] Email send error:", emailErr);
     }
 
     // Send to Telegram (permanent backup)
-    sendLeadToTelegram(lead).catch(err => {
-      console.error("Telegram send failed (background):", err);
+    console.log("[SUBMIT] Sending to Telegram...");
+    sendLeadToTelegram(lead).then(() => {
+      console.log("[SUBMIT] Telegram send completed successfully");
+    }).catch(err => {
+      console.error("[SUBMIT] Telegram send failed:", err.message, err.stack);
     });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("submit error", err);
+    console.error("[SUBMIT] Error:", err);
     return NextResponse.json({ error: "Erreur lors de l'enregistrement" }, { status: 500 });
   }
 }

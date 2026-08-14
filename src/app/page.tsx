@@ -6,9 +6,9 @@ import { SCENARIOS } from "@/lib/scenarios";
 type Step =
   | { name: "landing" }
   | { name: "quiz"; index: number }
-  | { name: "whatsapp"; answers: string[] }
+  | { name: "info"; answers: string[] }
   | { name: "loading" }
-  | { name: "result"; whatsapp: string }
+  | { name: "result" }
   | { name: "sent" };
 
 export default function Home() {
@@ -49,7 +49,7 @@ export default function Home() {
     if (step.index < SCENARIOS.length - 1) {
       setStep({ name: "quiz", index: step.index + 1 });
     } else {
-      setStep({ name: "whatsapp", answers: next });
+      setStep({ name: "info", answers: next });
     }
   }
 
@@ -61,7 +61,7 @@ export default function Home() {
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, email, mobile: mobile || step.name === "result" ? (step as any).whatsapp : "", answers, diagnosis }),
+        body: JSON.stringify({ firstName, email, mobile, answers, diagnosis }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Erreur");
@@ -112,7 +112,7 @@ export default function Home() {
     );
   }
 
-  if (step.name === "whatsapp") {
+  if (step.name === "info") {
     return (
       <Centered>
         <div className="max-w-md w-full space-y-8">
@@ -121,23 +121,39 @@ export default function Home() {
               Prêt à découvrir ?
             </h2>
             <p className="text-white/70">
-              Partage ton WhatsApp pour recevoir ton diagnostic personnalisé et accéder à des ressources exclusives.
+              Partage tes informations pour recevoir ton diagnostic personnalisé.
             </p>
           </div>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (mobile.trim()) {
+              if (firstName.trim() && email.trim() && mobile.trim()) {
                 runDiagnosis(step.answers, mobile.trim());
               }
             }}
             className="space-y-4"
           >
             <input
-              type="tel"
+              type="text"
               required
               autoFocus
+              placeholder="Ton prénom"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
+            />
+            <input
+              type="email"
+              required
+              placeholder="Ton email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
+            />
+            <input
+              type="tel"
+              required
               placeholder="Ton numéro WhatsApp (ex: +33612345678)"
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
@@ -148,7 +164,7 @@ export default function Home() {
               type="submit"
               className="w-full px-8 py-4 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition"
             >
-              Voir mon diagnostic
+              Voir mon diagnostic →
             </button>
           </form>
         </div>
@@ -210,39 +226,6 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="border-t border-white/10 pt-12 space-y-6">
-            <div className="space-y-2">
-              <p className="text-white/60 text-sm">
-                Tu veux aussi recevoir ce diagnostic par email ? Entre tes infos.
-              </p>
-            </div>
-            <form onSubmit={handleFormSubmit} className="space-y-4 max-w-md">
-              <input
-                type="text"
-                required
-                placeholder="Ton prénom"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
-              />
-              <input
-                type="email"
-                required
-                placeholder="Ton email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
-              />
-              {error && <p className="text-sm text-red-400">{error}</p>}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full px-8 py-3 bg-white/10 text-white font-medium tracking-wide rounded-full border border-white/20 hover:bg-white/20 transition disabled:opacity-50"
-              >
-                {submitting ? "Envoi..." : "Recevoir par email"}
-              </button>
-            </form>
-          </div>
         </div>
       </Centered>
     );

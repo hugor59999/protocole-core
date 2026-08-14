@@ -11,13 +11,21 @@ interface Lead {
 }
 
 export async function sendLeadToTelegram(lead: Lead): Promise<void> {
+  console.log('[TELEGRAM] Starting sendLeadToTelegram', {
+    hasToken: !!TELEGRAM_BOT_TOKEN,
+    hasChatId: !!TELEGRAM_CHAT_ID,
+    firstName: lead.firstName
+  });
+
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.warn('Telegram credentials missing');
+    console.error('[TELEGRAM] Missing credentials:', {
+      hasToken: !!TELEGRAM_BOT_TOKEN,
+      hasChatId: !!TELEGRAM_CHAT_ID
+    });
     return;
   }
 
-  const message = `
-🎯 **Nouveau Lead**
+  const message = `🎯 **Nouveau Lead**
 
 👤 **Prénom:** ${lead.firstName}
 📧 **Email:** ${lead.email}
@@ -28,10 +36,10 @@ export async function sendLeadToTelegram(lead: Lead): Promise<void> {
 ${lead.answers.map((a, i) => `Q${i + 1}: ${a}`).join('\n')}
 
 🔍 **Diagnostic:**
-${lead.diagnosis}
-`;
+${lead.diagnosis}`;
 
   try {
+    console.log('[TELEGRAM] Preparing to send message to chat:', TELEGRAM_CHAT_ID);
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const response = await fetch(url, {
       method: 'POST',
@@ -43,12 +51,16 @@ ${lead.diagnosis}
       }),
     });
 
+    const data = await response.json();
+    console.log('[TELEGRAM] Response status:', response.status);
+    console.log('[TELEGRAM] Response data:', data);
+
     if (!response.ok) {
-      console.error('Telegram send failed:', response.statusText);
+      console.error('[TELEGRAM] Send failed:', response.statusText, data);
     } else {
-      console.log('Lead sent to Telegram');
+      console.log('[TELEGRAM] Lead sent successfully, message_id:', data.result?.message_id);
     }
   } catch (err) {
-    console.error('Telegram error:', err);
+    console.error('[TELEGRAM] Exception:', err);
   }
 }
