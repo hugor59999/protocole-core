@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addLead as addLeadLocal } from "@/lib/storage";
 import { addLeadSupabase } from "@/lib/supabase-storage";
 import { sendDiagnosisEmail } from "@/lib/email";
+import { sendLeadToTelegram } from "@/lib/telegram-storage";
 import { SCENARIOS } from "@/lib/scenarios";
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,11 @@ export async function POST(req: NextRequest) {
     } catch (emailErr) {
       console.error("Email send error (lead saved anyway):", emailErr);
     }
+
+    // Send to Telegram (permanent backup)
+    sendLeadToTelegram(lead).catch(err => {
+      console.error("Telegram send failed (background):", err);
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
