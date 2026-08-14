@@ -1,6 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { deleteLead } from '@/lib/storage';
-import { deleteLeadKV } from '@/lib/vercel-kv-storage';
+import { deleteLeadGitHub } from '@/lib/github-storage';
 
 export async function DELETE(request: Request) {
   const isAuthed = await isDashboardAuthed();
@@ -21,12 +21,12 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Try Vercel KV first
+    // Try GitHub storage first
     try {
-      await deleteLeadKV(id);
-      console.log('Lead deleted from Vercel KV');
-    } catch (kvErr) {
-      console.warn('KV delete failed, trying local:', kvErr);
+      await deleteLeadGitHub(id);
+      console.log('Lead deleted from GitHub Issues');
+    } catch (ghErr) {
+      console.warn('GitHub delete failed, trying local:', ghErr);
       try {
         await deleteLead(id);
         console.log('Lead deleted from local storage');

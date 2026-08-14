@@ -1,6 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { getAllLeads as getAllLeadsLocal } from '@/lib/storage';
-import { getLeadsKV } from '@/lib/vercel-kv-storage';
+import { getLeadsGitHub } from '@/lib/github-storage';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -14,12 +14,12 @@ export async function GET() {
   try {
     let leads: any[] = [];
 
-    // Try Vercel KV first (production)
+    // Try GitHub storage first (production)
     try {
-      leads = await getLeadsKV();
-      console.log("Leads fetched from Vercel KV:", leads.length);
-    } catch (kvErr) {
-      console.error("Vercel KV not available, trying local storage:", kvErr);
+      leads = await getLeadsGitHub();
+      console.log("Leads fetched from GitHub Issues:", leads.length);
+    } catch (ghErr) {
+      console.error("GitHub storage not available, trying local storage:", ghErr);
       // Fallback to local storage (development)
       try {
         leads = await getAllLeadsLocal();
