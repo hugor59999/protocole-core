@@ -62,15 +62,17 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
 }
 
 function getDemodiagnosis(): string {
-  return `**Ton style d'attachement : Anxieux avec tendances désorganisées**
+  return `Ton style d'attachement : Anxieux avec tendances désorganisées
 
-Ce que tu ressens, c'est de l'anxiété relationnelle profonde. Tu t'abandonnes dans tes relations parce que tu cherches en priorité la validation externe, pas parce que tu es "faible". C'est une stratégie apprise : quelque part dans ton enfance, l'amour n'était pas constant. Il était conditionnel, imprévisible.
+Ce que tu ressens, c'est de l'anxiété relationnelle profonde. Tu t'abandonnes dans tes relations parce que tu cherches avant tout la validation externe — pas parce que tu es "faible", mais parce que c'est une stratégie de survie apprise. Quelque part dans ton enfance, l'amour n'était pas constant. Il était conditionnel, imprévisible, parfois retiré.
 
-**La blessure qui l'alimente**
+La blessure qui l'alimente
 
-Tu as probablement grandi avec un manque de sécurité émotionnelle. Peut-être un parent absent, ou au contraire trop présent et instable. Ton système nerveux a appris que "moins je montre qui je suis, moins je souffre". Mais paradoxalement, tu te jettes dans les relations en espérant que quelqu'un d'autre va te valider ce que tu ne peux pas te donner à toi-même.
+Ton système nerveux a appris à scanner l'environnement pour savoir si tu es "assez". Un parent absent, absent émotionnellement, ou trop présent et instable — peu importe. Ce que tu as intériorisé, c'est que ta valeur dépend de comment l'autre te regarde. Donc tu adaptes, tu te diminues, tu donnes tout pour garder la relation. Paradoxalement, plus tu te donnes, plus tu te perds.
 
-**Ce que ça révèle sur toi**
+Ce que ça révèle sur toi
 
-Le vrai travail c'est là : retrouver la confiance en ta propre valeur. Pas grâce à une femme. Grâce à toi. Actuellement, tu donnes ton pouvoir à l'autre. C'est épuisant pour vous deux.`;
+Le travail réel n'est pas sur les relations — c'est sur toi. Tu dois retrouver la confiance en ta propre valeur. Non pas grâce à une femme. Grâce à toi. Parce qu'actuellement, tu donnes ton pouvoir à l'autre, et c'est épuisant pour vous deux.
+
+La bonne nouvelle ? C'est apprenable. Tu peux construire une base de sécurité interne qui ne dépend pas du jugement de l'autre.`;
 }
