@@ -46,7 +46,9 @@ export default function DashboardPage() {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch('/api/admin/results');
+      const res = await fetch('/api/admin/results', {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch leads');
       const data = await res.json();
       setLeads(data.leads || []);
@@ -64,6 +66,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/admin/delete', {
         method: 'DELETE',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
@@ -81,7 +84,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/admin/check-auth');
+        const res = await fetch('/api/admin/check-auth', {
+          credentials: 'include',
+        });
         if (res.ok) {
           setIsAuthed(true);
           fetchLeads();
