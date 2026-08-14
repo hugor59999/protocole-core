@@ -13,10 +13,11 @@ export async function GET() {
   console.log("[TEST-LEAD] Starting test...");
 
   try {
-    await sendLeadToTelegram(testLead);
+    const result = await sendLeadToTelegram(testLead);
     return Response.json({
-      success: true,
-      message: "Test lead sent to Telegram",
+      success: result.ok,
+      telegramResponse: result,
+      message: result.ok ? "Test lead sent to Telegram" : `Failed: ${result.error}`,
       lead: testLead
     });
   } catch (err: any) {

@@ -10,7 +10,7 @@ interface Lead {
   diagnosis: string;
 }
 
-export async function sendLeadToTelegram(lead: Lead): Promise<void> {
+export async function sendLeadToTelegram(lead: Lead): Promise<{ok: boolean; messageId?: string; error?: string}> {
   console.log('[TELEGRAM] Starting sendLeadToTelegram', {
     hasToken: !!TELEGRAM_BOT_TOKEN,
     hasChatId: !!TELEGRAM_CHAT_ID,
@@ -22,7 +22,7 @@ export async function sendLeadToTelegram(lead: Lead): Promise<void> {
       hasToken: !!TELEGRAM_BOT_TOKEN,
       hasChatId: !!TELEGRAM_CHAT_ID
     });
-    return;
+    return { ok: false, error: 'Missing credentials' };
   }
 
   const message = `🎯 NOUVEAU LEAD
@@ -56,10 +56,13 @@ ${lead.diagnosis}`;
 
     if (!response.ok) {
       console.error('[TELEGRAM] Send failed:', response.statusText, data);
+      return { ok: false, error: data.description || response.statusText };
     } else {
       console.log('[TELEGRAM] Lead sent successfully, message_id:', data.result?.message_id);
+      return { ok: true, messageId: data.result?.message_id };
     }
   } catch (err) {
     console.error('[TELEGRAM] Exception:', err);
+    return { ok: false, error: err instanceof Error ? err.message : 'Unknown error' };
   }
 }
