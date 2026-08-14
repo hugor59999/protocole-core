@@ -25,17 +25,17 @@ export async function sendLeadToTelegram(lead: Lead): Promise<void> {
     return;
   }
 
-  const message = `🎯 **Nouveau Lead**
+  const message = `🎯 NOUVEAU LEAD
 
-👤 **Prénom:** ${lead.firstName}
-📧 **Email:** ${lead.email}
-📱 **Mobile:** ${lead.mobile}
-📅 **Date:** ${new Date(lead.date).toLocaleDateString('fr-FR')}
+👤 Prénom: ${lead.firstName}
+📧 Email: ${lead.email}
+📱 Mobile: ${lead.mobile}
+📅 Date: ${new Date(lead.date).toLocaleDateString('fr-FR')}
 
-📊 **Réponses:**
-${lead.answers.map((a, i) => `Q${i + 1}: ${a}`).join('\n')}
+📊 Réponses:
+${lead.answers.map((a, i) => `Q${i + 1}: ${a}`).join('\n\n')}
 
-🔍 **Diagnostic:**
+🔍 Diagnostic:
 ${lead.diagnosis}`;
 
   try {
@@ -47,7 +47,6 @@ ${lead.diagnosis}`;
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
         text: message,
-        parse_mode: 'Markdown',
       }),
     });
 
