@@ -19,7 +19,8 @@ async function ensureDir() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
   } catch (err) {
-    // Directory might already exist
+    console.error("Failed to create directory:", DATA_DIR, err);
+    throw err;
   }
 }
 
@@ -34,8 +35,14 @@ async function readLeads(): Promise<StoredLead[]> {
 }
 
 async function writeLeads(leads: StoredLead[]): Promise<void> {
-  await ensureDir();
-  await fs.writeFile(LEADS_FILE, JSON.stringify(leads, null, 2));
+  try {
+    await ensureDir();
+    await fs.writeFile(LEADS_FILE, JSON.stringify(leads, null, 2));
+    console.log("Leads written successfully to:", LEADS_FILE);
+  } catch (err) {
+    console.error("Failed to write leads to file:", LEADS_FILE, err);
+    throw err;
+  }
 }
 
 export async function addLead(lead: Omit<StoredLead, 'id' | 'status'>): Promise<string> {
