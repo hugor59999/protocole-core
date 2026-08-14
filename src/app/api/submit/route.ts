@@ -30,18 +30,23 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    // Try Airtable first (production)
+    // Try local storage first (reliable everywhere)
     try {
-      await addLeadAirtable(leadData);
-      console.log("Lead saved to Airtable");
-    } catch (airtableErr) {
-      console.error("Airtable save failed, trying local storage:", airtableErr);
-      // Fallback to local storage
       await addLeadLocal({
         ...leadData,
         date: new Date().toISOString(),
       });
       console.log("Lead saved to local storage");
+    } catch (localErr) {
+      console.error("Local storage save failed:", localErr);
+      // Try Airtable as backup
+      try {
+        await addLeadAirtable(leadData);
+        console.log("Lead saved to Airtable (backup)");
+      } catch (airtableErr) {
+        console.error("Airtable save also failed:", airtableErr);
+        throw new Error("Failed to save lead to both storage and Airtable");
+      }
     }
 
     // Send email (bonus, don't block on error)
