@@ -33,14 +33,29 @@ export default function DashboardPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.trim()) {
-      document.cookie = `dashboard_auth=${password}; path=/; max-age=86400`;
+    if (!password.trim()) return;
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!res.ok) {
+        setError('Mot de passe incorrect');
+        return;
+      }
+
       setIsAuthed(true);
       setPassword('');
       setError('');
       fetchLeads();
+    } catch (err) {
+      setError((err as any).message);
     }
   };
 
