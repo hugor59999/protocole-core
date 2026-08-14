@@ -226,6 +226,23 @@ export default function Home() {
             </p>
           </div>
 
+          <div className="border-t border-white/10 pt-8">
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-white/60 text-sm">
+                  Enregistre ton diagnostic pour le recevoir par email et l'accès aux ressources.
+                </p>
+              </div>
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full px-8 py-3 bg-white/10 text-white font-medium tracking-wide rounded-full border border-white/20 hover:bg-white/20 transition disabled:opacity-50"
+              >
+                {submitting ? "Envoi..." : "Recevoir par email"}
+              </button>
+            </form>
+          </div>
         </div>
       </Centered>
     );
