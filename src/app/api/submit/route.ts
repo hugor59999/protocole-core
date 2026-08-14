@@ -35,30 +35,18 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     };
 
-    // Try Supabase first (production)
-    let saved = false;
+    // Try local storage (primary method - works in dev, fallback in prod)
     try {
-      await addLeadSupabase(lead);
-      console.log("Lead saved to Supabase");
-      saved = true;
-    } catch (supabaseErr) {
-      console.error("Supabase save failed:", supabaseErr);
+      await addLeadLocal(lead);
+      console.log("Lead saved to local storage");
+    } catch (localErr) {
+      console.error("Local storage save failed:", localErr);
     }
 
-    // Fallback to local storage in development
-    if (!saved && process.env.NODE_ENV === 'development') {
-      try {
-        await addLeadLocal(lead);
-        console.log("Lead saved to local storage (dev)");
-        saved = true;
-      } catch (localErr) {
-        console.error("Local storage save failed:", localErr);
-      }
-    }
-
-    if (!saved) {
-      throw new Error("Failed to save lead to any storage");
-    }
+    // Try Supabase in background (don't block)
+    addLeadSupabase(lead).catch(err => {
+      console.error("Supabase save failed (background):", err?.message || err);
+    });
 
     // Send email (bonus, don't block on error)
     try {
