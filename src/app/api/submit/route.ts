@@ -95,7 +95,14 @@ export async function POST(req: NextRequest) {
       console.error("[SUBMIT] Telegram credentials missing - token:", !!token, "chatId:", !!chatId);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      debug: {
+        hasToken: !!process.env.TELEGRAM_BOT_TOKEN,
+        hasChatId: !!process.env.TELEGRAM_CHAT_ID,
+        chatId: process.env.TELEGRAM_CHAT_ID || "NOT SET",
+      }
+    });
   } catch (err) {
     console.error("[SUBMIT] Error:", err);
     return NextResponse.json({ error: "Erreur lors de l'enregistrement" }, { status: 500 });
