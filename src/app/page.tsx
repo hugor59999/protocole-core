@@ -33,7 +33,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Erreur");
       setDiagnosis(data.diagnosis);
-      setStep({ name: "result", whatsapp });
+      setStep({ name: "result" });
     } catch {
       setError("Une erreur est survenue pendant l'analyse. Réessaie.");
       setStep({ name: "quiz", index: finalAnswers.length - 1 });
