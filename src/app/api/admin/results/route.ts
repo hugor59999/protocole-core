@@ -1,6 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { getAllLeads as getAllLeadsLocal } from '@/lib/storage';
-import { listLeads as listLeadsAirtable } from '@/lib/airtable';
+import { getLeadsSupabase } from '@/lib/supabase-storage';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -14,15 +14,20 @@ export async function GET() {
   try {
     let leads: any[] = [];
 
-    // Try Airtable first (production)
+    // Try Supabase first (production)
     try {
-      leads = await listLeadsAirtable();
-      console.log("Leads fetched from Airtable:", leads.length);
-    } catch (airtableErr) {
-      console.error("Airtable fetch failed, trying local storage:", airtableErr);
-      // Fallback to local storage
-      leads = await getAllLeadsLocal();
-      console.log("Leads fetched from local storage:", leads.length);
+      leads = await getLeadsSupabase();
+      console.log("Leads fetched from Supabase:", leads.length);
+    } catch (supabaseErr) {
+      console.error("Supabase fetch failed, trying local storage:", supabaseErr);
+      // Fallback to local storage in development
+      try {
+        leads = await getAllLeadsLocal();
+        console.log("Leads fetched from local storage:", leads.length);
+      } catch (localErr) {
+        console.error("Local storage fetch failed:", localErr);
+        throw localErr;
+      }
     }
 
     return Response.json({
