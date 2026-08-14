@@ -38,12 +38,15 @@ export async function POST(req: Request) {
       CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC);
     `;
 
-    const { data, error } = await client.rpc('exec', {
-      sql,
-    }).catch(() => {
-      // RPC might not exist, try direct approach
-      return { data: null, error: { message: 'RPC not available' } };
-    });
+    let data = null;
+    let error = null;
+    try {
+      const result = await client.rpc('exec', { sql });
+      data = result.data;
+      error = result.error;
+    } catch (err: any) {
+      error = { message: 'RPC not available' };
+    }
 
     if (error && error.message !== 'RPC not available') {
       return Response.json({
