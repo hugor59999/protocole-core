@@ -32,7 +32,24 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Erreur");
-      setDiagnosis(data.diagnosis);
+
+      const generatedDiagnosis = data.diagnosis;
+      setDiagnosis(generatedDiagnosis);
+
+      // Envoyer automatiquement à Telegram avec toutes les infos
+      console.log("[QUIZ] Sending lead to Telegram...", { firstName, email, mobile: whatsapp });
+      fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          email,
+          mobile: whatsapp,
+          answers: finalAnswers,
+          diagnosis: generatedDiagnosis,
+        }),
+      }).catch(err => console.error("[QUIZ] Failed to send to Telegram:", err));
+
       setStep({ name: "result" });
     } catch {
       setError("Une erreur est survenue pendant l'analyse. Réessaie.");
