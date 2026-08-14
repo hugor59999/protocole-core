@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     });
 
-    await sendDiagnosisEmail({ to: email.trim(), firstName: firstName.trim(), diagnosis });
+    try {
+      await sendDiagnosisEmail({ to: email.trim(), firstName: firstName.trim(), diagnosis });
+    } catch (emailErr) {
+      console.error("Email send error (lead saved anyway):", emailErr);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

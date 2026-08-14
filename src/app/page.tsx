@@ -304,7 +304,7 @@ function QuizStep({
   error: string;
   onSubmit: (value: string) => void;
 }) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState("");
   const progress = ((index + 1) / total) * 100;
 
   return (
