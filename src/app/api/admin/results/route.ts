@@ -1,6 +1,6 @@
 import { isDashboardAuthed } from '@/lib/dashboard-auth';
 import { getAllLeads as getAllLeadsLocal } from '@/lib/storage';
-import { getLeadsSupabase } from '@/lib/supabase-storage';
+import { getLeadsKV } from '@/lib/vercel-kv-storage';
 
 export async function GET() {
   const isAuthed = await isDashboardAuthed();
@@ -14,13 +14,13 @@ export async function GET() {
   try {
     let leads: any[] = [];
 
-    // Try Supabase first (production)
+    // Try Vercel KV first (production)
     try {
-      leads = await getLeadsSupabase();
-      console.log("Leads fetched from Supabase:", leads.length);
-    } catch (supabaseErr) {
-      console.error("Supabase fetch failed, trying local storage:", supabaseErr);
-      // Fallback to local storage in development
+      leads = await getLeadsKV();
+      console.log("Leads fetched from Vercel KV:", leads.length);
+    } catch (kvErr) {
+      console.error("Vercel KV not available, trying local storage:", kvErr);
+      // Fallback to local storage (development)
       try {
         leads = await getAllLeadsLocal();
         console.log("Leads fetched from local storage:", leads.length);

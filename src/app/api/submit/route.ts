@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addLead as addLeadLocal } from "@/lib/storage";
-import { addLeadSupabase } from "@/lib/supabase-storage";
+import { addLeadKV } from "@/lib/vercel-kv-storage";
 import { sendDiagnosisEmail } from "@/lib/email";
 import { sendLeadToTelegram } from "@/lib/telegram-storage";
 import { SCENARIOS } from "@/lib/scenarios";
@@ -36,18 +36,20 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     };
 
-    // Try local storage (primary method - works in dev, fallback in prod)
+    // Try Vercel KV first (production)
     try {
-      await addLeadLocal(lead);
-      console.log("Lead saved to local storage");
-    } catch (localErr) {
-      console.error("Local storage save failed:", localErr);
+      await addLeadKV(lead);
+      console.log("Lead saved to Vercel KV");
+    } catch (kvErr) {
+      console.error("Vercel KV not available, using local storage:", kvErr);
+      // Fallback to local storage (development)
+      try {
+        await addLeadLocal(lead);
+        console.log("Lead saved to local storage (fallback)");
+      } catch (localErr) {
+        console.error("Local storage save also failed:", localErr);
+      }
     }
-
-    // Try Supabase in background (don't block)
-    addLeadSupabase(lead).catch(err => {
-      console.error("Supabase save failed (background):", err?.message || err);
-    });
 
     // Send email (bonus, don't block on error)
     try {
