@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addLead as addLeadLocal } from "@/lib/storage";
-import { createLead as addLeadAirtable } from "@/lib/airtable";
 import { sendDiagnosisEmail } from "@/lib/email";
 import { sendLeadToTelegram } from "@/lib/telegram-storage";
 import { SCENARIOS } from "@/lib/scenarios";
@@ -36,19 +35,12 @@ export async function POST(req: NextRequest) {
       date: new Date().toISOString(),
     };
 
-    // Try Airtable first (production)
+    // Save locally (dev only)
     try {
-      await addLeadAirtable(leadData);
-      console.log("Lead saved to Airtable");
-    } catch (airtableErr: any) {
-      console.error("Airtable save failed:", airtableErr?.message);
-      // Fallback to local storage (development)
-      try {
-        await addLeadLocal(lead);
-        console.log("Lead saved to local storage (fallback)");
-      } catch (localErr) {
-        console.error("Local storage save also failed:", localErr);
-      }
+      await addLeadLocal(lead);
+      console.log("Lead saved to local storage (dev)");
+    } catch (localErr) {
+      console.error("Local storage save failed:", localErr);
     }
 
     // Send email (bonus, don't block on error)
