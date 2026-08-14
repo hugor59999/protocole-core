@@ -34,26 +34,31 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
     return getDemodiagnosis();
   }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const userContent = SCENARIOS.map(
-    (scenario, i) => `Scénario ${i + 1} : ${scenario}\nRéponse : ${answers[i]}`
-  ).join("\n\n");
+    const userContent = SCENARIOS.map(
+      (scenario, i) => `Scénario ${i + 1} : ${scenario}\nRéponse : ${answers[i]}`
+    ).join("\n\n");
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Voici les réponses de cet homme aux 6 scénarios. Génère son diagnostic.\n\n${userContent}`,
-      },
-    ],
-  });
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: `Voici les réponses de cet homme aux 6 scénarios. Génère son diagnostic.\n\n${userContent}`,
+        },
+      ],
+    });
 
-  const block = message.content[0];
-  return block.type === "text" ? block.text : "";
+    const block = message.content[0];
+    return block.type === "text" ? block.text : getDemodiagnosis();
+  } catch (err) {
+    console.error("Anthropic API error:", err);
+    return getDemodiagnosis();
+  }
 }
 
 function getDemodiagnosis(): string {
