@@ -36,8 +36,8 @@ export default function Home() {
       const generatedDiagnosis = data.diagnosis;
       setDiagnosis(generatedDiagnosis);
 
-      // Envoyer automatiquement à Telegram avec toutes les infos
-      console.log("[QUIZ] Sending lead to Telegram...", { firstName, email, mobile: whatsapp });
+      // Envoyer automatiquement à Telegram
+      console.log("[QUIZ] Sending lead...", { firstName, email, mobile: whatsapp });
       fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,7 +48,7 @@ export default function Home() {
           answers: finalAnswers,
           diagnosis: generatedDiagnosis,
         }),
-      }).catch(err => console.error("[QUIZ] Failed to send to Telegram:", err));
+      }).catch(err => console.error("[QUIZ] Error:", err));
 
       setStep({ name: "result" });
     } catch {
