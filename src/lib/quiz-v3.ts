@@ -244,7 +244,7 @@ export const QUIZ_QUESTIONS_V3: QuizQuestion[] = [
       },
       {
         key: "D",
-        text: '"C\\'est dommage mais c\\'est OK, je vais apprendre de ça et continuer"',
+        text: "C'est dommage mais c'est OK, je vais apprendre de ça et continuer",
         attachmentScore: "secure",
         nervousSystemScore: 2
       }
