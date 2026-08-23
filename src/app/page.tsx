@@ -1,19 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { SCENARIOS } from "@/lib/scenarios";
+import { QUIZ_QUESTIONS_V3 } from "@/lib/quiz-v3";
+
+interface Answer {
+  attachmentScore: "anxious" | "avoidant" | "disorganized" | "secure";
+  nervousSystemScore: number;
+}
 
 type Step =
   | { name: "landing" }
   | { name: "quiz"; index: number }
-  | { name: "info"; answers: string[] }
+  | { name: "info"; answers: Answer[] }
   | { name: "loading" }
   | { name: "result" }
   | { name: "sent" };
 
 export default function Home() {
   const [step, setStep] = useState<Step>({ name: "landing" });
-  const [answers, setAnswers] = useState<string[]>(Array(SCENARIOS.length).fill(""));
+  const [answers, setAnswers] = useState<Answer[]>(Array(QUIZ_QUESTIONS_V3.length).fill(null as any));
   const [diagnosis, setDiagnosis] = useState("");
   const [error, setError] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -21,22 +26,35 @@ export default function Home() {
   const [mobile, setMobile] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  async function runDiagnosis(finalAnswers: string[], whatsapp: string) {
+  async function runDiagnosis(finalAnswers: Answer[], whatsapp: string) {
     setStep({ name: "loading" });
     setError("");
     try {
-      const res = await fetch("/api/diagnose", {
+      // 1. Calculate score from answers
+      const scoreRes = await fetch("/api/calculate-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: finalAnswers }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Erreur");
+      const scoreData = await scoreRes.json();
+      if (!scoreRes.ok) throw new Error(scoreData?.error || "Erreur");
 
-      const generatedDiagnosis = data.diagnosis;
+      // 2. Generate diagnosis (using calculated scores)
+      const diagRes = await fetch("/api/diagnose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answers: finalAnswers,
+          scores: scoreData,
+        }),
+      });
+      const diagData = await diagRes.json();
+      if (!diagRes.ok) throw new Error(diagData?.error || "Erreur");
+
+      const generatedDiagnosis = diagData.diagnosis;
       setDiagnosis(generatedDiagnosis);
 
-      // Envoyer automatiquement à Telegram
+      // 3. Send to Telegram
       console.log("[QUIZ] Sending lead...", { firstName, email, mobile: whatsapp });
       fetch("/api/submit", {
         method: "POST",
@@ -47,23 +65,25 @@ export default function Home() {
           mobile: whatsapp,
           answers: finalAnswers,
           diagnosis: generatedDiagnosis,
+          scores: scoreData,
         }),
       }).catch(err => console.error("[QUIZ] Error:", err));
 
       setStep({ name: "result" });
-    } catch {
+    } catch (err) {
+      console.error("[QUIZ] Diagnosis error:", err);
       setError("Une erreur est survenue pendant l'analyse. Réessaie.");
       setStep({ name: "quiz", index: finalAnswers.length - 1 });
     }
   }
 
-  function handleAnswerSubmit(value: string) {
+  function handleAnswerSubmit(answer: Answer) {
     if (step.name !== "quiz") return;
     const next = [...answers];
-    next[step.index] = value;
+    next[step.index] = answer;
     setAnswers(next);
 
-    if (step.index < SCENARIOS.length - 1) {
+    if (step.index < QUIZ_QUESTIONS_V3.length - 1) {
       setStep({ name: "quiz", index: step.index + 1 });
     } else {
       setStep({ name: "info", answers: next });
@@ -120,9 +140,9 @@ export default function Home() {
     return (
       <QuizStep
         index={step.index}
-        total={SCENARIOS.length}
-        question={SCENARIOS[step.index]}
-        initialValue={answers[step.index]}
+        total={QUIZ_QUESTIONS_V3.length}
+        question={QUIZ_QUESTIONS_V3[step.index]}
+        selectedAnswer={answers[step.index]}
         error={error}
         onSubmit={handleAnswerSubmit}
       />
@@ -310,18 +330,18 @@ function QuizStep({
   index,
   total,
   question,
-  initialValue,
+  selectedAnswer,
   error,
   onSubmit,
 }: {
   index: number;
   total: number;
-  question: string;
-  initialValue: string;
+  question: (typeof QUIZ_QUESTIONS_V3)[0];
+  selectedAnswer?: Answer;
   error: string;
-  onSubmit: (value: string) => void;
+  onSubmit: (value: Answer) => void;
 }) {
-  const [value, setValue] = useState("");
+  const [selected, setSelected] = useState<Answer | null>(selectedAnswer || null);
   const progress = ((index + 1) / total) * 100;
 
   return (
@@ -340,29 +360,55 @@ function QuizStep({
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight leading-snug mb-10">
-          {question}
+          {question.question}
         </h2>
 
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (value.trim()) onSubmit(value.trim());
+            if (selected) onSubmit(selected);
           }}
-          className="flex-1 flex flex-col"
+          className="flex-1 flex flex-col space-y-6"
         >
-          <textarea
-            autoFocus
-            required
-            rows={6}
-            placeholder="Sois honnête. Qu'est-ce qui se passe réellement en toi dans cette situation ?"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition resize-none"
-          />
-          {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
+          <div className="space-y-3">
+            {question.answers.map((answer) => (
+              <label
+                key={answer.key}
+                className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition ${
+                  selected?.attachmentScore === answer.attachmentScore &&
+                  selected?.nervousSystemScore === answer.nervousSystemScore
+                    ? "bg-white/10 border-white/50"
+                    : "bg-white/5 border-white/20 hover:bg-white/7 hover:border-white/30"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${index}`}
+                  checked={
+                    selected?.attachmentScore === answer.attachmentScore &&
+                    selected?.nervousSystemScore === answer.nervousSystemScore
+                  }
+                  onChange={() => {
+                    setSelected({
+                      attachmentScore: answer.attachmentScore,
+                      nervousSystemScore: answer.nervousSystemScore,
+                    });
+                  }}
+                  className="mt-1 w-5 h-5 accent-white cursor-pointer flex-shrink-0"
+                />
+                <div className="flex-1">
+                  <p className="text-white/90 font-medium">{answer.key}</p>
+                  <p className="text-white/70">{answer.text}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <button
             type="submit"
-            className="mt-8 self-start px-8 py-3 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition"
+            disabled={!selected}
+            className="mt-8 self-start px-8 py-3 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {index === total - 1 ? "Voir mon diagnostic" : "Suivant →"}
           </button>

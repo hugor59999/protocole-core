@@ -3,36 +3,50 @@ import { SCENARIOS } from "./scenarios";
 
 const SYSTEM_PROMPT = `Tu es Hugo, expert de la psychologie masculine et de la régulation du système nerveux en relation.
 
-Analyse les réponses de cet homme à 6 scénarios concrets (messages sans réponse, engagement, auto-censure, idéalisation, compréhension sans changement, dialogue interne).
+Analyse les réponses de cet homme à 8 scénarios réels :
+1. Messages sans réponse / anxiété
+2. Engagement / peur
+3. Auto-censure / adaptation
+4. Idéalisation rapide
+5. Sur-don
+6. Compréhension intellectuelle sans changement
+7. Sensation physique avant des moments importants
+8. Dialogue interne après rejet
 
-Le framework clé : son problème n'est PAS un manque de technique, pas une question d'attachement théorique, pas "la mauvaise personne". C'est que son système nerveux est en MODE SURVIE dans les relations.
+Framework : combine SYSTÈME NERVEUX + ATTACHEMENT
+- Son problème n'est pas un manque de technique ni "la mauvaise personne"
+- C'est un système nerveux dérégulé qui active un style d'attachement
+- L'attachement (anxieux/évitant/désorganisé) EST la manifestation du système nerveux en mode survie
 
-Patterns à identifier dans ses réponses :
-- Anxiété sur les temps de réponse / sur-analyse des messages
-- Peur profonde de l'abandon au moment de l'engagement réel
-- Auto-censure : adaptation permanente, ne pas oser demander, marcher sur des œufs
-- Idéalisation rapide du partenaire quand il correspond aux critères
-- Compréhension intellectuelle qui ne change rien au comportement
-- Dialogue interne dévalorisant ("pourquoi moi", "je changerai jamais", "c'est trop tard")
+Patterns à reconnaître :
+- Attachement ANXIEUX = système nerveux hyperactivé : peur constante, besoin de réassurance, sur-don
+- Attachement ÉVITANT = système nerveux en shutdown : fermeture émotionnelle, fuite de l'intimité
+- Attachement DÉSORGANISÉ = dysrégulation extrême : oscille entre panique et fuite
+- Attachement SÉCURE = système nerveux régulé : présence, confiance, équilibre
 
-Structure du diagnostic en 3 parties :
-1. CE QU'IL VOIT : reconnaître ses patterns réels (ne pas inventer, utiliser ses propres mots)
-2. LA RÉVÉLATION : "Ce n'est pas un manque de technique. C'est ton système nerveux qui est en mode survie. Quand tu es en peur d'abandon ou de rejet, ton corps prend le contrôle et tu ne peux pas être toi-même."
-3. LA CLARTÉ : "Réguler ton système nerveux = tu agis naturellement, tu attires sans effort, tu retrouves le contrôle"
+Structure du diagnostic en 4 parties :
+1. CE QU'IL MONTRE : ses patterns réels (reprendre ses propres mots quand c'est fort)
+2. SON ATTACHEMENT : nommer le style d'attachement qu'il manifeste
+3. LA RÉVÉLATION : "C'est pas une question de technique. C'est que ton système nerveux est dérégulé — il pense que la relation est dangereuse. C'est du pilote automatique."
+4. LA SOLUTION : "Réguler ton système nerveux = sécurité interne = tu peux être toi-même naturellement"
 
-Terminologie clé :
-- Système nerveux dérégulé vs stabilisé
-- Mode survie vs mode présence
-- Pilote automatique
-- "Sors du pilote automatique"
+Phrase clé : "Sors du pilote automatique."
 
 Règles :
-- Parle-lui directement, pas du lui
-- Ton humain, bienveillant, JAMAIS clinique ou théorique
-- 250-350 mots max
-- Termine par l'invitation claire : "Prêt à explorer comment ça change quand tu sors du pilote automatique?"`;
+- Parle-lui directement
+- Identifie le style d'attachement clairement
+- Connecte-le au système nerveux (pas juste la théorie)
+- Utilise ses propres mots quand c'est révélateur
+- Ton humain, pas clinique
+- 300-400 mots max
+- Termine par l'invitation : "Prêt à explorer comment tu sors du pilote automatique?"`;
 
-export async function generateDiagnosis(answers: string[]): Promise<string> {
+interface Answer {
+  attachmentScore: "anxious" | "avoidant" | "disorganized" | "secure";
+  nervousSystemScore: number;
+}
+
+export async function generateDiagnosis(answers: Answer[]): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) {
     return getDemodiagnosis();
   }
@@ -41,7 +55,8 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const userContent = SCENARIOS.map(
-      (scenario, i) => `Scénario ${i + 1} : ${scenario}\nRéponse : ${answers[i]}`
+      (scenario, i) =>
+        `Scénario ${i + 1} : ${scenario}\nRéponse : Attachement ${answers[i].attachmentScore} (dysrégulation nerveuse: ${answers[i].nervousSystemScore}/10)`
     ).join("\n\n");
 
     const message = await client.messages.create({
@@ -51,7 +66,7 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
       messages: [
         {
           role: "user",
-          content: `Voici les réponses de cet homme aux 6 scénarios. Génère son diagnostic.\n\n${userContent}`,
+          content: `Voici les réponses de cet homme aux 8 scénarios. Génère son diagnostic en combinant système nerveux + attachement.\n\n${userContent}`,
         },
       ],
     });
@@ -67,17 +82,23 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
 function getDemodiagnosis(): string {
   return `Ce que tes réponses révèlent
 
-Tu vois : tu contrôles bien ta carrière, ta présence, ton image. Mais dès qu'une relation compte vraiment, tu deviens quelqu'un d'autre. Tu sur-analyses les messages, tu te diminues, tu dis pas ce que tu veux, tu idéalises trop vite. Et le pire ? Tu sais que tu fais ça, mais tu n'arrives pas à arrêter.
+Tu contrôles bien ta vie extérieure — le business, l'image, la présence. Mais en relation, ça change complètement. Tu sur-analyses les messages, tu te censures pour ne pas la perdre, tu donnes trop, tu l'idéalises rapidement. Puis une fois que tu as compris tes patterns, rien ne change vraiment. C'est comme si ton corps n'avait pas reçu l'information.
 
-Le vrai problème : ce n'est pas un manque de technique. Ce n'est pas "la mauvaise personne". C'est que ton système nerveux bascule en mode survie dès qu'il y a de l'enjeu émotionnel.
+Ton attachement : ANXIEUX avec activation du système nerveux
+Ton système nerveux se perçoit en danger émotionnel. Il signale "perte d'amour = danger existentiel". Donc il active des protections : sur-interprétation des messages, besoin constant de réassurance, auto-censure, sur-don. C'est pas de l'indiscipline. C'est du pilote automatique.
 
-Quand tu es en mode survie, ton corps prend le contrôle. Tu peux pas accéder à ta logique, à ta capacité à fixer des limites, à ta vraie présence. Tu es en pilote automatique. Et ce pilote automatique vient d'une peur très profonde : "je vais être abandonné et ça voudra dire que je ne vaux rien."
+Le vrai problème
+Ce n'est pas un manque de technique. Ce n'est pas elle. C'est que ton système nerveux est dérégulé dans les relations. Il croit que tu vas être abandonné = que tu ne vaux rien. Et il agit à partir de cette croyance avant que tu puisses même penser.
 
-Pourquoi c'est important
+Pourquoi la compréhension seule ne change rien
+Ton cerveau a compris. Ton corps ne l'a pas compris. Réguler le système nerveux, c'est passer du mode survie au mode présence. Pas par la compréhension. Par la régulation.
 
-En ce moment, tu penses que réguler c'est apprendre une nouvelle technique. Mais non. Réguler ton système nerveux, c'est juste lui faire comprendre qu'il n'est plus en danger. C'est ça qui change tout. Parce qu'une fois qu'il est stable, tu peux être toi-même naturellement. Tu attires des femmes qui te choisissent vraiment. Tu reconnectes avec le contrôle.
+Quand c'est régulé :
+- Tu peux être toi-même naturellement (pas d'effort)
+- Tu attires sans technique
+- Tu as du contrôle et de la paix
 
 Sors du pilote automatique.
 
-Prêt à explorer comment ça marche vraiment ? 30 minutes pour voir ensemble comment tu peux basculer de mode survie à mode présence.`;
+Prêt à explorer comment tu peux vraiment réguler ça et retrouver le contrôle en relation?`;
 }
