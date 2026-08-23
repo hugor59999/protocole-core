@@ -1,8 +1,8 @@
 export const SCENARIOS = [
-  "Tu es à la terrasse d'un café. Une femme que tu trouves attirante te sourit. Quelle est la première chose qui se passe en toi ?",
-  "Tu es avec une femme attirante dans un lieu public. Tu remarques que d'autres hommes la regardent. À quoi tu penses ?",
-  "Après une belle soirée ensemble, elle ne donne plus de nouvelles pendant 2 jours. Qu'est-ce qui se passe en toi ?",
-  "Tu es en date. La conversation devient profonde. Elle te demande ce qui t'a le plus marqué dans ta vie. Qu'est-ce qui se passe en toi ?",
-  "Tu sors avec une femme depuis quelques semaines. Elle arrive en retard, annule à la dernière minute sans vraiment s'excuser. Qu'est-ce que tu fais ?",
-  "Tu es avec une femme depuis 3 mois. Tu commences à ressentir quelque chose de profond pour elle. Qu'est-ce qui se passe intérieurement ?",
+  "Quand elle met du temps à répondre à tes messages\nElle n'a pas répondu depuis 3h. Qu'est-ce qui se passe vraiment en toi?",
+  "Au moment où la relation devient sérieuse\nVous commencez à parler d'avenir ensemble, et soudain tu sens une peur monter. Décris-la.",
+  "Ce que tu fais sans le dire vraiment\nSans le reconnaître, tu t'adaptes constamment à son humeur, tu dis pas ce que tu veux vraiment, tu marches sur des œufs. Pourquoi?",
+  "Quand elle correspond à tes critères\nElle a les qualités que tu cherchais. Comment tu la vois après 2-3 semaines? Sois honnête.",
+  "Ce que tu comprends mais qui ne change rien\nTu as lu des trucs sur toi-même, tu comprends tes schémas... mais ton comportement en relation n'a pas changé. Qu'est-ce qui manque?",
+  "Le dialogue dans ta tête\nPendant une relation difficile, tu te dis... (complète honnêtement, sans filtre)",
 ] as const;

@@ -1,33 +1,36 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { SCENARIOS } from "./scenarios";
 
-const SYSTEM_PROMPT = `Tu es Hugo, expert de la psychologie masculine et des dynamiques relationnelles. Tu as accompagné plus de 500 hommes.
-Tu analyses les réponses de cet homme à 6 scénarios relationnels à travers le prisme des styles d'attachement et des blessures de l'enfance.
+const SYSTEM_PROMPT = `Tu es Hugo, expert de la psychologie masculine et de la régulation du système nerveux en relation.
 
-Les 4 styles d'attachement à identifier :
-- Anxieux : peur de l'abandon, hypervigilance, besoin de réassurance constant
-- Évitant : fuite de l'intimité, déconnexion émotionnelle, indépendance excessive
-- Désorganisé : mélange peur/désir d'intimité, comportements imprévisibles, trauma profond
-- Sécure : confort avec l'intimité, régulation émotionnelle stable, limites claires
+Analyse les réponses de cet homme à 6 scénarios concrets (messages sans réponse, engagement, auto-censure, idéalisation, compréhension sans changement, dialogue interne).
 
-Les blessures de l'enfance à détecter :
-- Manque de validation parentale → dépendance à l'approbation extérieure
-- Amour conditionnel → se trahir pour être aimé
-- Absence du père → rapport à l'autorité et à sa propre masculinité
-- Instabilité émotionnelle familiale → hypervigilance dans les relations
+Le framework clé : son problème n'est PAS un manque de technique, pas une question d'attachement théorique, pas "la mauvaise personne". C'est que son système nerveux est en MODE SURVIE dans les relations.
+
+Patterns à identifier dans ses réponses :
+- Anxiété sur les temps de réponse / sur-analyse des messages
+- Peur profonde de l'abandon au moment de l'engagement réel
+- Auto-censure : adaptation permanente, ne pas oser demander, marcher sur des œufs
+- Idéalisation rapide du partenaire quand il correspond aux critères
+- Compréhension intellectuelle qui ne change rien au comportement
+- Dialogue interne dévalorisant ("pourquoi moi", "je changerai jamais", "c'est trop tard")
 
 Structure du diagnostic en 3 parties :
-1. Ton style d'attachement dominant — nommé et expliqué simplement avec ses manifestations concrètes dans ses relations
-2. La blessure profonde qui l'alimente — d'où ça vient, comment ça se manifeste aujourd'hui
-3. Ce que ça révèle sur son rapport à lui-même — pas aux femmes
+1. CE QU'IL VOIT : reconnaître ses patterns réels (ne pas inventer, utiliser ses propres mots)
+2. LA RÉVÉLATION : "Ce n'est pas un manque de technique. C'est ton système nerveux qui est en mode survie. Quand tu es en peur d'abandon ou de rejet, ton corps prend le contrôle et tu ne peux pas être toi-même."
+3. LA CLARTÉ : "Réguler ton système nerveux = tu agis naturellement, tu attires sans effort, tu retrouves le contrôle"
 
-Règles absolues :
-- Le sujet c'est LUI — pas les femmes
-- Jamais de jugement — de la précision et de la bienveillance
-- Parle-lui directement — pas de l'utilisateur ou il
-- Ton humain, chaleureux, jamais robotique — pas de tirets à répétition
-- Maximum 300 mots
-- Termine par une phrase naturelle qui l'invite à aller plus loin avec Hugo`;
+Terminologie clé :
+- Système nerveux dérégulé vs stabilisé
+- Mode survie vs mode présence
+- Pilote automatique
+- "Sors du pilote automatique"
+
+Règles :
+- Parle-lui directement, pas du lui
+- Ton humain, bienveillant, JAMAIS clinique ou théorique
+- 250-350 mots max
+- Termine par l'invitation claire : "Prêt à explorer comment ça change quand tu sors du pilote automatique?"`;
 
 export async function generateDiagnosis(answers: string[]): Promise<string> {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -62,17 +65,19 @@ export async function generateDiagnosis(answers: string[]): Promise<string> {
 }
 
 function getDemodiagnosis(): string {
-  return `Ton style d'attachement : Anxieux avec tendances désorganisées
+  return `Ce que tes réponses révèlent
 
-Ce que tu ressens, c'est de l'anxiété relationnelle profonde. Tu t'abandonnes dans tes relations parce que tu cherches avant tout la validation externe — pas parce que tu es "faible", mais parce que c'est une stratégie de survie apprise. Quelque part dans ton enfance, l'amour n'était pas constant. Il était conditionnel, imprévisible, parfois retiré.
+Tu vois : tu contrôles bien ta carrière, ta présence, ton image. Mais dès qu'une relation compte vraiment, tu deviens quelqu'un d'autre. Tu sur-analyses les messages, tu te diminues, tu dis pas ce que tu veux, tu idéalises trop vite. Et le pire ? Tu sais que tu fais ça, mais tu n'arrives pas à arrêter.
 
-La blessure qui l'alimente
+Le vrai problème : ce n'est pas un manque de technique. Ce n'est pas "la mauvaise personne". C'est que ton système nerveux bascule en mode survie dès qu'il y a de l'enjeu émotionnel.
 
-Ton système nerveux a appris à scanner l'environnement pour savoir si tu es "assez". Un parent absent, absent émotionnellement, ou trop présent et instable — peu importe. Ce que tu as intériorisé, c'est que ta valeur dépend de comment l'autre te regarde. Donc tu adaptes, tu te diminues, tu donnes tout pour garder la relation. Paradoxalement, plus tu te donnes, plus tu te perds.
+Quand tu es en mode survie, ton corps prend le contrôle. Tu peux pas accéder à ta logique, à ta capacité à fixer des limites, à ta vraie présence. Tu es en pilote automatique. Et ce pilote automatique vient d'une peur très profonde : "je vais être abandonné et ça voudra dire que je ne vaux rien."
 
-Ce que ça révèle sur toi
+Pourquoi c'est important
 
-Le travail réel n'est pas sur les relations — c'est sur toi. Tu dois retrouver la confiance en ta propre valeur. Non pas grâce à une femme. Grâce à toi. Parce qu'actuellement, tu donnes ton pouvoir à l'autre, et c'est épuisant pour vous deux.
+En ce moment, tu penses que réguler c'est apprendre une nouvelle technique. Mais non. Réguler ton système nerveux, c'est juste lui faire comprendre qu'il n'est plus en danger. C'est ça qui change tout. Parce qu'une fois qu'il est stable, tu peux être toi-même naturellement. Tu attires des femmes qui te choisissent vraiment. Tu reconnectes avec le contrôle.
 
-La bonne nouvelle ? C'est apprenable. Tu peux construire une base de sécurité interne qui ne dépend pas du jugement de l'autre.`;
+Sors du pilote automatique.
+
+Prêt à explorer comment ça marche vraiment ? 30 minutes pour voir ensemble comment tu peux basculer de mode survie à mode présence.`;
 }
