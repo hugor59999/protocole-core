@@ -91,7 +91,8 @@ export default function Home() {
     if (currentQuestion < QUESTIONS.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      setStep("quiz");
+      // Move to open-ended question
+      setCurrentQuestion(QUESTIONS.length);
     }
   };
 
