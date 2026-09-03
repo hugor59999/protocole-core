@@ -109,5 +109,48 @@
     "date": "2026-08-23T16:59:18.875Z",
     "id": "z97hvpucb",
     "status": "À contacter"
+  },
+  {
+    "firstName": "Test",
+    "email": "test@test.com",
+    "mobile": "+33600000000",
+    "answers": [
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 9
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 9
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 8
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 8
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 8
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 8
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 9
+      },
+      {
+        "attachmentScore": "anxious",
+        "nervousSystemScore": 8
+      }
+    ],
+    "diagnosis": "Ce que tes réponses révèlent\n\nTu contrôles bien ta vie extérieure — le business, l'image, la présence. Mais en relation, ça change complètement. Tu sur-analyses les messages, tu te censures pour ne pas la perdre, tu donnes trop, tu l'idéalises rapidement. Puis une fois que tu as compris tes patterns, rien ne change vraiment. C'est comme si ton corps n'avait pas reçu l'information.\n\nTon attachement : ANXIEUX avec activation du système nerveux\nTon système nerveux se perçoit en danger émotionnel. Il signale \"perte d'amour = danger existentiel\". Donc il active des protections : sur-interprétation des messages, besoin constant de réassurance, auto-censure, sur-don. C'est pas de l'indiscipline. C'est du pilote automatique.\n\nLe vrai problème\nCe n'est pas un manque de technique. Ce n'est pas elle. C'est que ton système nerveux est dérégulé dans les relations. Il croit que tu vas être abandonné = que tu ne vaux rien. Et il agit à partir de cette croyance avant que tu puisses même penser.\n\nPourquoi la compréhension seule ne change rien\nTon cerveau a compris. Ton corps ne l'a pas compris. Réguler le système nerveux, c'est passer du mode survie au mode présence. Pas par la compréhension. Par la régulation.\n\nQuand c'est régulé :\n- Tu peux être toi-même naturellement (pas d'effort)\n- Tu attires sans technique\n- Tu as du contrôle et de la paix\n\nSors du pilote automatique.\n\nPrêt à explorer comment tu peux vraiment réguler ça et retrouver le contrôle en relation?",
+    "date": "2026-08-23T17:02:05.425Z",
+    "id": "omcmm81n3",
+    "status": "À contacter"
   }
 ]

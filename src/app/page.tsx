@@ -1,419 +1,413 @@
 "use client";
 
 import { useState } from "react";
-import { QUIZ_QUESTIONS_V3 } from "@/lib/quiz-v3";
+import emailjs from "@emailjs/browser";
 
-interface Answer {
-  attachmentScore: "anxious" | "avoidant" | "disorganized" | "secure";
-  nervousSystemScore: number;
+interface QuizAnswer {
+  question: number;
+  answer: string;
 }
 
-type Step =
-  | { name: "landing" }
-  | { name: "quiz"; index: number }
-  | { name: "info"; answers: Answer[] }
-  | { name: "loading" }
-  | { name: "result" }
-  | { name: "sent" };
+type Step = "landing" | "quiz" | "results" | "loading";
+
+const QUESTIONS = [
+  {
+    id: 1,
+    text: "Elle met 3h à répondre. Qu'est-ce qui se passe en toi ?",
+    options: [
+      "Je relis mon dernier message pour voir ce que j'ai dit de travers",
+      "Je continue ma journée — elle est sûrement occupée",
+      "Je lui envoie un message pour vérifier que tout va bien",
+      "Je pose mon téléphone et je fais comme si ça ne me touchait pas"
+    ]
+  },
+  {
+    id: 2,
+    text: "Tu rencontres quelqu'un qui correspond à tout ce que tu cherches :",
+    options: [
+      "Je commence à trop y tenir avant même que la relation soit réelle",
+      "Je m'investis naturellement sans perdre mon ancrage",
+      "J'ai besoin de savoir rapidement si elle ressent la même chose",
+      "Je garde mes distances malgré l'attraction — trop d'enjeu"
+    ]
+  },
+  {
+    id: 3,
+    text: "Après une rupture ou un ghosting, tu fais :",
+    options: [
+      "Je rejoue les scènes en cherchant ce que j'aurais pu faire différemment",
+      "Je prends le temps de traverser ça, puis je passe à autre chose",
+      "Je reprends contact pour avoir une explication",
+      "Je passe rapidement à autre chose pour ne pas ressentir"
+    ]
+  },
+  {
+    id: 4,
+    text: "Quand tu prends du temps pour toi sans l'avoir mérité — tu ressens :",
+    options: [
+      "De la culpabilité — j'aurais dû être plus productif ou présent",
+      "Rien — me reposer fait partie de ma vie",
+      "De l'anxiété — les autres vont penser que je ne m'investis pas",
+      "Du vide — sans accomplissement je ne sais pas trop qui je suis"
+    ]
+  },
+  {
+    id: 5,
+    text: "Pour toi, être aimé c'est :",
+    options: [
+      "Être accepté pour qui tu es, sans avoir à le mériter",
+      "Être reconnu pour ce que tu apportes et accomplis",
+      "Quelque chose d'incertain — ça peut disparaître à tout moment",
+      "Quelque chose que tu mérites quand tu te comportes bien"
+    ]
+  }
+];
+
+// Initialize EmailJS (you need to set up EmailJS account first)
+if (typeof window !== "undefined") {
+  emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_KEY || "");
+}
 
 export default function Home() {
-  const [step, setStep] = useState<Step>({ name: "landing" });
-  const [answers, setAnswers] = useState<Answer[]>(Array(QUIZ_QUESTIONS_V3.length).fill(null as any));
+  const [step, setStep] = useState<Step>("landing");
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<QuizAnswer[]>([]);
+  const [openAnswer, setOpenAnswer] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [error, setError] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  async function runDiagnosis(finalAnswers: Answer[], whatsapp: string) {
-    setStep({ name: "loading" });
-    setError("");
-    try {
-      // 1. Calculate score from answers
-      const scoreRes = await fetch("/api/calculate-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: finalAnswers }),
-      });
-      const scoreData = await scoreRes.json();
-      if (!scoreRes.ok) throw new Error(scoreData?.error || "Erreur");
+  const handleSelectAnswer = (index: number) => {
+    setSelectedIndex(index);
+  };
 
-      // 2. Generate diagnosis (using calculated scores)
-      const diagRes = await fetch("/api/diagnose", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          answers: finalAnswers,
-          scores: scoreData,
-        }),
-      });
-      const diagData = await diagRes.json();
-      if (!diagRes.ok) throw new Error(diagData?.error || "Erreur");
+  const handleNext = () => {
+    if (selectedIndex === null) return;
 
-      const generatedDiagnosis = diagData.diagnosis;
-      setDiagnosis(generatedDiagnosis);
+    const newAnswers = [
+      ...answers,
+      {
+        question: QUESTIONS[currentQuestion].id,
+        answer: QUESTIONS[currentQuestion].options[selectedIndex]
+      }
+    ];
+    setAnswers(newAnswers);
+    setSelectedIndex(null);
 
-      // 3. Send to Telegram
-      console.log("[QUIZ] Sending lead...", { firstName, email, mobile: whatsapp });
-      fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          email,
-          mobile: whatsapp,
-          answers: finalAnswers,
-          diagnosis: generatedDiagnosis,
-          scores: scoreData,
-        }),
-      }).catch(err => console.error("[QUIZ] Error:", err));
-
-      setStep({ name: "result" });
-    } catch (err) {
-      console.error("[QUIZ] Diagnosis error:", err);
-      setError("Une erreur est survenue pendant l'analyse. Réessaie.");
-      setStep({ name: "quiz", index: finalAnswers.length - 1 });
-    }
-  }
-
-  function handleAnswerSubmit(answer: Answer) {
-    if (step.name !== "quiz") return;
-    const next = [...answers];
-    next[step.index] = answer;
-    setAnswers(next);
-
-    if (step.index < QUIZ_QUESTIONS_V3.length - 1) {
-      setStep({ name: "quiz", index: step.index + 1 });
+    if (currentQuestion < QUESTIONS.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
     } else {
-      setStep({ name: "info", answers: next });
+      setStep("quiz");
     }
-  }
+  };
 
-  async function handleFormSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const handleSubmitOpen = async () => {
+    if (!openAnswer.trim()) return;
+
+    setStep("loading");
     setError("");
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, email, mobile, answers, diagnosis }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Erreur");
-      setStep({ name: "sent" });
-    } catch {
-      setError("Impossible d'enregistrer tes informations. Réessaie.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
-  if (step.name === "landing") {
+    try {
+      // Generate diagnosis based on answers
+      const attachmentDiag = generateDiagnosis(answers, openAnswer);
+      setDiagnosis(attachmentDiag);
+
+      // Send via EmailJS
+      if (process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID) {
+        await emailjs.send(
+          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "",
+          {
+            to_email: "raverdy.hugo1@gmail.com",
+            message: `Question 6: ${openAnswer}\n\nTimestamp: ${new Date().toLocaleString()}`,
+            subject: "Nouvelle réponse au quiz Protocole Core"
+          }
+        );
+      }
+
+      setStep("results");
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Une erreur est survenue. Réessaie.");
+      setStep("quiz");
+    }
+  };
+
+  const generateDiagnosis = (quizAnswers: QuizAnswer[], openAnswer: string): string => {
+    // Count answer patterns to identify attachment style
+    const answerTexts = quizAnswers.map(a => a.answer);
+
+    // Scoring logic for attachment patterns
+    const anxious = (
+      (answerTexts[0]?.includes("relis") ? 1 : 0) +
+      (answerTexts[1]?.includes("trop y tenir") ? 1 : 0) +
+      (answerTexts[2]?.includes("reprends contact") ? 1 : 0) +
+      (answerTexts[3]?.includes("culpabilité") ? 1 : 0) +
+      (answerTexts[4]?.includes("incertain") ? 1 : 0)
+    );
+
+    const avoidant = (
+      (answerTexts[0]?.includes("pose mon téléphone") ? 1 : 0) +
+      (answerTexts[1]?.includes("distances") ? 1 : 0) +
+      (answerTexts[2]?.includes("rapidement") ? 1 : 0) +
+      (answerTexts[3]?.includes("vide") ? 1 : 0) +
+      (answerTexts[4]?.includes("accomplissement") ? 1 : 0)
+    );
+
+    const secure = (
+      (answerTexts[0]?.includes("continue") ? 1 : 0) +
+      (answerTexts[1]?.includes("naturellement") ? 1 : 0) +
+      (answerTexts[2]?.includes("prends le temps") ? 1 : 0) +
+      (answerTexts[3]?.includes("Rien") ? 1 : 0) +
+      (answerTexts[4]?.includes("accepté") ? 1 : 0)
+    );
+
+    const preoccupied = (
+      (answerTexts[0]?.includes("envoie un message") ? 1 : 0) +
+      (answerTexts[1]?.includes("rapidement") ? 1 : 0) +
+      (answerTexts[2]?.includes("rejoue") ? 1 : 0) +
+      (answerTexts[3]?.includes("anxiété") ? 1 : 0) +
+      (answerTexts[4]?.includes("mérite") ? 1 : 0)
+    );
+
+    let attachmentStyle = "Secure";
+    let mask = "L'Adaptateur";
+    let explanation = "";
+
+    if (anxious >= 3) {
+      attachmentStyle = "Anxious";
+      mask = "L'Anxieux";
+      explanation = "Tu cherches constamment la validation et la réassurance. Tu interprètes chaque silence comme un rejet potentiel, et tu t'adaptes excessivement pour maintenir la connexion.";
+    } else if (avoidant >= 3) {
+      attachmentStyle = "Avoidant";
+      mask = "L'Indépendant";
+      explanation = "Tu maintiens une distance émotionnelle pour te protéger. Tu valorises ton autonomie au-dessus de la connexion, et tu repousses l'intimité dès qu'elle devient trop intense.";
+    } else if (preoccupied >= 3) {
+      attachmentStyle = "Preoccupied";
+      mask = "L'Hypervigilant";
+      explanation = "Tu es constamment préoccupé par l'état de ta relation. Tu cherches des signes de problèmes et tu interviens rapidement, parfois de façon maladroite, pour résoudre une situation.";
+    } else {
+      attachmentStyle = "Secure";
+      mask = "L'Équilibré";
+      explanation = "Tu as une relation saine avec la solitude et l'intimité. Tu peux te reposer sans culpabilité et tu acceptes le rythme naturel des relations.";
+    }
+
+    return `
+DIAGNOSTIC COMPLET
+
+Ton style d'attachement: ${attachmentStyle}
+Le masque que tu portes: ${mask}
+
+${explanation}
+
+Ce que tu veux changer:
+"${openAnswer}"
+
+---
+
+Ce qui s'apprend peut se désapprendre.
+Sors du pilote automatique.
+    `.trim();
+  };
+
+  // Landing page
+  if (step === "landing") {
     return (
-      <Centered>
-        <div className="max-w-2xl text-center space-y-10">
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-5xl sm:text-7xl font-bold tracking-tight leading-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-              Pourquoi te perds-tu<br />dans tes relations ?
+            <h1 className="text-4xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
+              Comprends ton attachement
             </h1>
-            <p className="text-lg sm:text-xl text-white/70">
-              Découvre les schémas inconscients qui sabotent ton pouvoir et ta liberté.
+            <p className="text-lg" style={{ color: "#F5EFE4" }}>
+              Découvre le masque que tu portes en relation et ce qui se cache vraiment en toi.
             </p>
           </div>
-          <p className="text-sm text-white/50 max-w-md mx-auto">
-            Un diagnostic personnalisé basé sur l'analyse de tes patterns relationnels. Gratuit, confidentiellement.
-          </p>
           <button
-            onClick={() => setStep({ name: "quiz", index: 0 })}
-            className="inline-block px-12 py-4 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition shadow-lg hover:shadow-xl"
+            onClick={() => setStep("quiz")}
+            className="w-full py-4 px-8 rounded-lg font-semibold transition hover:opacity-90"
+            style={{ backgroundColor: "#C8A97A", color: "#1C1A16" }}
           >
-            Démarrer le diagnostic →
+            Démarrer le quiz →
           </button>
         </div>
-      </Centered>
-    );
-  }
-
-  if (step.name === "quiz") {
-    return (
-      <QuizStep
-        index={step.index}
-        total={QUIZ_QUESTIONS_V3.length}
-        question={QUIZ_QUESTIONS_V3[step.index]}
-        selectedAnswer={answers[step.index]}
-        error={error}
-        onSubmit={handleAnswerSubmit}
-      />
-    );
-  }
-
-  if (step.name === "info") {
-    return (
-      <Centered>
-        <div className="max-w-md w-full space-y-8">
-          <div className="space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Prêt à découvrir ?
-            </h2>
-            <p className="text-white/70">
-              Partage tes informations pour recevoir ton diagnostic personnalisé.
-            </p>
-          </div>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (firstName.trim() && email.trim() && mobile.trim()) {
-                runDiagnosis(step.answers, mobile.trim());
-              }
-            }}
-            className="space-y-4"
-          >
-            <input
-              type="text"
-              required
-              autoFocus
-              placeholder="Ton prénom"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
-            />
-            <input
-              type="email"
-              required
-              placeholder="Ton email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
-            />
-            <input
-              type="tel"
-              required
-              placeholder="Ton numéro WhatsApp (ex: +33612345678)"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 focus:bg-white/10 transition"
-            />
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-              type="submit"
-              className="w-full px-8 py-4 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition"
-            >
-              Voir mon diagnostic →
-            </button>
-          </form>
-        </div>
-      </Centered>
-    );
-  }
-
-  if (step.name === "loading") {
-    return (
-      <Centered>
-        <div className="text-center space-y-6">
-          <div className="mx-auto h-10 w-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          <p className="text-lg text-white/70 tracking-wide">Analyse en cours...</p>
-        </div>
-      </Centered>
-    );
-  }
-
-  if (step.name === "result") {
-    const calendlyUrl = "https://calendly.com/hugo-rf/appel-decouverte-core";
-    return (
-      <Centered>
-        <div className="max-w-3xl w-full space-y-12 py-16">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                Ton diagnostic
-              </h2>
-              <p className="text-white/60">
-                Analyse personnalisée basée sur tes réponses
-              </p>
-            </div>
-            <div className="bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl p-8 sm:p-10 text-white/90 leading-relaxed whitespace-pre-wrap text-base sm:text-lg space-y-4">
-              {diagnosis.split("\n\n").map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10 rounded-2xl p-8 text-center space-y-6">
-            <div className="space-y-2">
-              <p className="text-white font-semibold text-lg">
-                Prêt à passer à l'action ?
-              </p>
-              <p className="text-white/70">
-                Réserve un appel avec Hugo pour transformer ces insights en changements concrets.
-              </p>
-            </div>
-            <a
-              href={calendlyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold tracking-wide rounded-full hover:from-blue-600 hover:to-purple-700 transition shadow-lg hover:shadow-xl"
-            >
-              Réserver un appel gratuit →
-            </a>
-            <p className="text-white/50 text-sm">
-              Appel découverte de 30 min. Aucun engagement.
-            </p>
-          </div>
-
-          <div className="border-t border-white/10 pt-8">
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-white/60 text-sm">
-                  Enregistre ton diagnostic pour le recevoir par email et l'accès aux ressources.
-                </p>
-              </div>
-              {error && <p className="text-sm text-red-400">{error}</p>}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full px-8 py-3 bg-white/10 text-white font-medium tracking-wide rounded-full border border-white/20 hover:bg-white/20 transition disabled:opacity-50"
-              >
-                {submitting ? "Envoi..." : "Recevoir par email"}
-              </button>
-            </form>
-          </div>
-        </div>
-      </Centered>
-    );
-  }
-
-  // sent
-  return (
-    <Centered>
-      <div className="max-w-md text-center space-y-8">
-        <div className="space-y-3">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            C'est en route. ✓
-          </h2>
-          <p className="text-white/70 text-lg">
-            Ton diagnostic complet est en chemin vers ton email.
-          </p>
-        </div>
-        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/10 rounded-xl p-6 space-y-4">
-          <p className="text-white/80">
-            Prêt à transformer ce que tu viens de découvrir ?
-          </p>
-          <a
-            href="https://calendly.com/hugo-rf/appel-decouverte-core"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-10 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold tracking-wide rounded-full hover:from-blue-600 hover:to-purple-700 transition"
-          >
-            Réserver un appel avec Hugo
-          </a>
-        </div>
-        <p className="text-white/50 text-sm">
-          Appel gratuit de 30 min. Aucun engagement. Juste un conversation honnête.
-        </p>
       </div>
-    </Centered>
-  );
-}
+    );
+  }
 
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex-1 flex items-center justify-center px-6">
-      {children}
-    </main>
-  );
-}
+  // Quiz page (questions 1-5)
+  if (step === "quiz" && currentQuestion < QUESTIONS.length) {
+    const question = QUESTIONS[currentQuestion];
+    const progress = ((currentQuestion + 1) / (QUESTIONS.length + 1)) * 100;
 
-function QuizStep({
-  index,
-  total,
-  question,
-  selectedAnswer,
-  error,
-  onSubmit,
-}: {
-  index: number;
-  total: number;
-  question: (typeof QUIZ_QUESTIONS_V3)[0];
-  selectedAnswer?: Answer;
-  error: string;
-  onSubmit: (value: Answer) => void;
-}) {
-  const [selected, setSelected] = useState<Answer | null>(selectedAnswer || null);
-  const progress = ((index + 1) / total) * 100;
-
-  return (
-    <main className="flex-1 flex flex-col px-6 py-10">
-      <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
-        <div className="mb-12 space-y-3">
-          <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-white to-white/70 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+    return (
+      <div className="min-h-screen flex flex-col px-6 py-8" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
+          {/* Progress bar */}
+          <div className="mb-12 space-y-3">
+            <div className="h-1 w-full rounded-full overflow-hidden" style={{ backgroundColor: "#3D5247" }}>
+              <div
+                className="h-full transition-all duration-300"
+                style={{ width: `${progress}%`, backgroundColor: "#C8A97A" }}
+              />
+            </div>
+            <p className="text-sm" style={{ color: "#F5EFE4" }}>
+              Question {currentQuestion + 1} sur {QUESTIONS.length + 1}
+            </p>
           </div>
-          <p className="text-sm text-white/40">
-            Question {index + 1} sur {total}
-          </p>
-        </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight leading-snug mb-10">
-          {question.question}
-        </h2>
+          {/* Question */}
+          <h2 className="text-2xl font-serif font-bold mb-10" style={{ color: "#F5EFE4" }}>
+            {question.text}
+          </h2>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (selected) onSubmit(selected);
-          }}
-          className="flex-1 flex flex-col space-y-6"
-        >
-          <div className="space-y-3">
-            {question.answers.map((answer) => (
-              <label
-                key={answer.key}
-                className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition ${
-                  selected?.attachmentScore === answer.attachmentScore &&
-                  selected?.nervousSystemScore === answer.nervousSystemScore
-                    ? "bg-white/10 border-white/50"
-                    : "bg-white/5 border-white/20 hover:bg-white/7 hover:border-white/30"
-                }`}
+          {/* Options */}
+          <div className="space-y-3 flex-1">
+            {question.options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectAnswer(index)}
+                className="w-full p-4 rounded-lg text-left transition"
+                style={{
+                  backgroundColor: selectedIndex === index ? "#C8A97A" : "#3D5247",
+                  color: selectedIndex === index ? "#1C1A16" : "#F5EFE4",
+                  border: `2px solid ${selectedIndex === index ? "#C8A97A" : "transparent"}`
+                }}
               >
-                <input
-                  type="radio"
-                  name={`question-${index}`}
-                  checked={
-                    selected?.attachmentScore === answer.attachmentScore &&
-                    selected?.nervousSystemScore === answer.nervousSystemScore
-                  }
-                  onChange={() => {
-                    setSelected({
-                      attachmentScore: answer.attachmentScore,
-                      nervousSystemScore: answer.nervousSystemScore,
-                    });
-                  }}
-                  className="mt-1 w-5 h-5 accent-white cursor-pointer flex-shrink-0"
-                />
-                <div className="flex-1">
-                  <p className="text-white/90 font-medium">{answer.key}</p>
-                  <p className="text-white/70">{answer.text}</p>
-                </div>
-              </label>
+                <p className="font-semibold">{String.fromCharCode(65 + index)}.</p>
+                <p>{option}</p>
+              </button>
             ))}
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {/* Next button */}
           <button
-            type="submit"
-            disabled={!selected}
-            className="mt-8 self-start px-8 py-3 bg-gradient-to-r from-white to-white/90 text-black font-bold tracking-wide rounded-full hover:from-white/95 hover:to-white/85 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleNext}
+            disabled={selectedIndex === null}
+            className="mt-8 px-8 py-4 rounded-lg font-semibold transition disabled:opacity-50"
+            style={{
+              backgroundColor: selectedIndex !== null ? "#C8A97A" : "#3D5247",
+              color: "#1C1A16"
+            }}
           >
-            {index === total - 1 ? "Voir mon diagnostic" : "Suivant →"}
+            {currentQuestion === QUESTIONS.length - 1 ? "Suivant (Question ouverte)" : "Suivant →"}
           </button>
-        </form>
+        </div>
       </div>
-    </main>
-  );
+    );
+  }
+
+  // Open question (question 6)
+  if (step === "quiz" && currentQuestion >= QUESTIONS.length) {
+    const progress = ((QUESTIONS.length + 1) / (QUESTIONS.length + 1)) * 100;
+
+    return (
+      <div className="min-h-screen flex flex-col px-6 py-8" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
+          {/* Progress bar */}
+          <div className="mb-12 space-y-3">
+            <div className="h-1 w-full rounded-full overflow-hidden" style={{ backgroundColor: "#3D5247" }}>
+              <div
+                className="h-full transition-all duration-300"
+                style={{ width: `${progress}%`, backgroundColor: "#C8A97A" }}
+              />
+            </div>
+            <p className="text-sm" style={{ color: "#F5EFE4" }}>
+              Question {QUESTIONS.length + 1} sur {QUESTIONS.length + 1}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h2 className="text-2xl font-serif font-bold mb-8" style={{ color: "#F5EFE4" }}>
+            Qu'est-ce que tu veux vraiment changer dans tes relations ?
+          </h2>
+
+          {/* Textarea */}
+          <textarea
+            value={openAnswer}
+            onChange={(e) => setOpenAnswer(e.target.value)}
+            placeholder="Écris librement..."
+            className="flex-1 p-4 rounded-lg resize-none focus:outline-none"
+            style={{
+              backgroundColor: "#3D5247",
+              color: "#F5EFE4",
+              borderColor: "#C8A97A"
+            }}
+          />
+
+          {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
+
+          {/* Submit button */}
+          <button
+            onClick={handleSubmitOpen}
+            disabled={!openAnswer.trim()}
+            className="mt-8 px-8 py-4 rounded-lg font-semibold transition disabled:opacity-50"
+            style={{
+              backgroundColor: openAnswer.trim() ? "#C8A97A" : "#3D5247",
+              color: "#1C1A16"
+            }}
+          >
+            Voir mon diagnostic →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading page
+  if (step === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="text-center space-y-6">
+          <div
+            className="mx-auto h-12 w-12 border-4 rounded-full animate-spin"
+            style={{ borderColor: "#3D5247", borderTopColor: "#C8A97A" }}
+          />
+          <p style={{ color: "#F5EFE4" }} className="text-lg">
+            Analyse en cours...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Results page
+  if (step === "results") {
+    return (
+      <div className="min-h-screen flex flex-col px-6 py-12" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-2xl w-full mx-auto">
+          <div className="space-y-8">
+            <h2 className="text-3xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
+              Ton Diagnostic
+            </h2>
+
+            {/* Diagnosis */}
+            <div className="p-8 rounded-lg" style={{ backgroundColor: "#3D5247" }}>
+              <p className="whitespace-pre-line" style={{ color: "#F5EFE4" }}>
+                {diagnosis}
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center space-y-4">
+              <a
+                href="https://calendly.com/hugo-rf/session-de-reconstruction-clone"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-10 py-4 rounded-lg font-semibold transition"
+                style={{ backgroundColor: "#C8A97A", color: "#1C1A16" }}
+              >
+                Réserver un appel →
+              </a>
+              <p style={{ color: "#F5EFE4" }} className="text-sm">
+                Appel de reconstruction de 60 min
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
