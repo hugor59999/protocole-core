@@ -7,7 +7,7 @@ interface QuizAnswer {
   answer: string;
 }
 
-type Step = "landing" | "quiz" | "results" | "loading";
+type Step = "landing" | "quiz" | "whatsapp" | "loading" | "sent";
 
 const QUESTIONS = [
   {
@@ -15,24 +15,24 @@ const QUESTIONS = [
     text: "Elle met 3h à répondre. Qu'est-ce qui se passe en toi ?",
     options: [
       "Je relis mon dernier message pour voir ce que j'ai dit de travers",
-      "Je continue ma journée — elle est sûrement occupée",
+      "Je continue ma journée, elle est sûrement occupée",
       "Je lui envoie un message pour vérifier que tout va bien",
       "Je pose mon téléphone et je fais comme si ça ne me touchait pas"
     ]
   },
   {
     id: 2,
-    text: "Tu rencontres quelqu'un qui correspond à tout ce que tu cherches :",
+    text: "Tu rencontres quelqu'un qui correspond à tout ce que tu cherches:",
     options: [
       "Je commence à trop y tenir avant même que la relation soit réelle",
       "Je m'investis naturellement sans perdre mon ancrage",
       "J'ai besoin de savoir rapidement si elle ressent la même chose",
-      "Je garde mes distances malgré l'attraction — trop d'enjeu"
+      "Je garde mes distances malgré l'attraction, trop d'enjeu"
     ]
   },
   {
     id: 3,
-    text: "Après une rupture ou un ghosting, tu fais :",
+    text: "Après une rupture ou un ghosting, tu fais:",
     options: [
       "Je rejoue les scènes en cherchant ce que j'aurais pu faire différemment",
       "Je prends le temps de traverser ça, puis je passe à autre chose",
@@ -42,37 +42,32 @@ const QUESTIONS = [
   },
   {
     id: 4,
-    text: "Quand tu prends du temps pour toi sans l'avoir mérité — tu ressens :",
+    text: "Quand tu prends du temps pour toi librement, tu ressens:",
     options: [
-      "De la culpabilité — j'aurais dû être plus productif ou présent",
-      "Rien — me reposer fait partie de ma vie",
-      "De l'anxiété — les autres vont penser que je ne m'investis pas",
-      "Du vide — sans accomplissement je ne sais pas trop qui je suis"
+      "De la culpabilité: j'aurais dû être plus productif ou présent",
+      "Rien, me reposer fait partie de ma vie",
+      "De l'anxiété: les autres vont penser que je ne m'investis pas",
+      "Du vide, sans accomplissement je ne sais pas trop qui je suis"
     ]
   },
   {
     id: 5,
-    text: "Pour toi, être aimé c'est :",
+    text: "Pour toi, être aimé c'est:",
     options: [
       "Être accepté pour qui tu es, sans avoir à le mériter",
       "Être reconnu pour ce que tu apportes et accomplis",
-      "Quelque chose d'incertain — ça peut disparaître à tout moment",
+      "Quelque chose d'incertain qui peut disparaître à tout moment",
       "Quelque chose que tu mérites quand tu te comportes bien"
     ]
   }
 ];
-
-// Initialize EmailJS (you need to set up EmailJS account first)
-if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_EMAILJS_KEY) {
-  emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_KEY);
-}
 
 export default function Home() {
   const [step, setStep] = useState<Step>("landing");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [openAnswer, setOpenAnswer] = useState("");
-  const [diagnosis, setDiagnosis] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [error, setError] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
@@ -100,27 +95,47 @@ export default function Home() {
     }
   };
 
-  const handleSubmitOpen = () => {
+  const handleSubmitOpen = async () => {
     if (!openAnswer.trim()) return;
+    setStep("whatsapp");
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!whatsapp.trim()) {
+      setError("Le numéro WhatsApp est obligatoire pour recevoir ton diagnostic");
+      return;
+    }
 
     setStep("loading");
     setError("");
 
-    // Generate diagnosis based on answers
-    const attachmentDiag = generateDiagnosis(answers, openAnswer);
-    setDiagnosis(attachmentDiag);
+    try {
+      // Generate diagnosis
+      const diagnosis = generateDiagnosis(answers, openAnswer);
 
-    // Simulate send delay
-    setTimeout(() => {
-      setStep("results");
-    }, 500);
+      // Send via WhatsApp API
+      const response = await fetch("/api/send-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          whatsapp: whatsapp.trim(),
+          diagnosis: diagnosis
+        })
+      });
+
+      if (!response.ok) throw new Error("Failed to send WhatsApp");
+
+      setStep("sent");
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Erreur lors de l'envoi du diagnostic. Réessaie.");
+      setStep("whatsapp");
+    }
   };
 
   const generateDiagnosis = (quizAnswers: QuizAnswer[], openAnswer: string): string => {
-    // Count answer patterns to identify attachment style
     const answerTexts = quizAnswers.map(a => a.answer);
 
-    // Scoring logic for attachment patterns
     const anxious = (
       (answerTexts[0]?.includes("relis") ? 1 : 0) +
       (answerTexts[1]?.includes("trop y tenir") ? 1 : 0) +
@@ -175,8 +190,7 @@ export default function Home() {
       explanation = "Tu as une relation saine avec la solitude et l'intimité. Tu peux te reposer sans culpabilité et tu acceptes le rythme naturel des relations.";
     }
 
-    return `
-DIAGNOSTIC COMPLET
+    return `DIAGNOSTIC COMPLET
 
 Ton style d'attachement: ${attachmentStyle}
 Le masque que tu portes: ${mask}
@@ -189,8 +203,7 @@ Ce que tu veux changer:
 ---
 
 Ce qui s'apprend peut se désapprendre.
-Sors du pilote automatique.
-    `.trim();
+Sors du pilote automatique.`;
   };
 
   // Landing page
@@ -226,7 +239,6 @@ Sors du pilote automatique.
     return (
       <div className="min-h-screen flex flex-col px-6 py-8" style={{ backgroundColor: "#1C1A16" }}>
         <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
-          {/* Progress bar */}
           <div className="mb-12 space-y-3">
             <div className="h-1 w-full rounded-full overflow-hidden" style={{ backgroundColor: "#3D5247" }}>
               <div
@@ -239,12 +251,10 @@ Sors du pilote automatique.
             </p>
           </div>
 
-          {/* Question */}
           <h2 className="text-2xl font-serif font-bold mb-10" style={{ color: "#F5EFE4" }}>
             {question.text}
           </h2>
 
-          {/* Options */}
           <div className="space-y-3 flex-1">
             {question.options.map((option, index) => (
               <button
@@ -263,7 +273,6 @@ Sors du pilote automatique.
             ))}
           </div>
 
-          {/* Next button */}
           <button
             onClick={handleNext}
             disabled={selectedIndex === null}
@@ -287,7 +296,6 @@ Sors du pilote automatique.
     return (
       <div className="min-h-screen flex flex-col px-6 py-8" style={{ backgroundColor: "#1C1A16" }}>
         <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
-          {/* Progress bar */}
           <div className="mb-12 space-y-3">
             <div className="h-1 w-full rounded-full overflow-hidden" style={{ backgroundColor: "#3D5247" }}>
               <div
@@ -300,12 +308,10 @@ Sors du pilote automatique.
             </p>
           </div>
 
-          {/* Question */}
           <h2 className="text-2xl font-serif font-bold mb-8" style={{ color: "#F5EFE4" }}>
             Qu'est-ce que tu veux vraiment changer dans tes relations ?
           </h2>
 
-          {/* Textarea */}
           <textarea
             value={openAnswer}
             onChange={(e) => setOpenAnswer(e.target.value)}
@@ -320,7 +326,6 @@ Sors du pilote automatique.
 
           {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
 
-          {/* Submit button */}
           <button
             onClick={handleSubmitOpen}
             disabled={!openAnswer.trim()}
@@ -330,8 +335,53 @@ Sors du pilote automatique.
               color: "#1C1A16"
             }}
           >
-            Voir mon diagnostic →
+            Continuer →
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // WhatsApp collection page
+  if (step === "whatsapp") {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
+              Reçois ton diagnostic par WhatsApp
+            </h2>
+            <p style={{ color: "#F5EFE4" }}>
+              Entre ton numéro WhatsApp pour recevoir ton diagnostic complet. Assure-toi de bien entrer le bon numéro sinon tu ne recevras rien.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <input
+              type="tel"
+              placeholder="+33612345678"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className="w-full p-4 rounded-lg focus:outline-none"
+              style={{
+                backgroundColor: "#3D5247",
+                color: "#F5EFE4",
+                borderColor: "#C8A97A"
+              }}
+            />
+            {error && <p className="text-red-400 text-sm">{error}</p>}
+            <button
+              onClick={handleSendWhatsApp}
+              disabled={!whatsapp.trim()}
+              className="w-full py-4 px-8 rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-50"
+              style={{
+                backgroundColor: whatsapp.trim() ? "#C8A97A" : "#3D5247",
+                color: "#1C1A16"
+              }}
+            >
+              Recevoir mon diagnostic →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -347,45 +397,40 @@ Sors du pilote automatique.
             style={{ borderColor: "#3D5247", borderTopColor: "#C8A97A" }}
           />
           <p style={{ color: "#F5EFE4" }} className="text-lg">
-            Analyse en cours...
+            Envoi en cours...
           </p>
         </div>
       </div>
     );
   }
 
-  // Results page
-  if (step === "results") {
+  // Sent page
+  if (step === "sent") {
     return (
-      <div className="min-h-screen flex flex-col px-6 py-12" style={{ backgroundColor: "#1C1A16" }}>
-        <div className="max-w-2xl w-full mx-auto">
-          <div className="space-y-8">
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="space-y-4">
             <h2 className="text-3xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
-              Ton Diagnostic
+              C'est en route ✓
             </h2>
+            <p style={{ color: "#F5EFE4" }}>
+              Ton diagnostic complet arrive sur WhatsApp dans quelques instants.
+            </p>
+          </div>
 
-            {/* Diagnosis */}
-            <div className="p-8 rounded-lg" style={{ backgroundColor: "#3D5247" }}>
-              <p className="whitespace-pre-line" style={{ color: "#F5EFE4" }}>
-                {diagnosis}
-              </p>
-            </div>
-
-            {/* CTA */}
-            <div className="text-center space-y-4">
-              <a
-                href="https://calendly.com/hugo-rf/session-de-reconstruction-clone"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-10 py-4 rounded-lg font-semibold transition"
-                style={{ backgroundColor: "#C8A97A", color: "#1C1A16" }}
-              >
-                Réserver un appel →
-              </a>
-              <p style={{ color: "#F5EFE4" }} className="text-sm">
-                Appel de reconstruction de 60 min
-              </p>
-            </div>
+          <div className="text-center space-y-4">
+            <a
+              href="https://calendly.com/hugo-rf/session-de-reconstruction-clone"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-10 py-4 rounded-lg font-semibold transition"
+              style={{ backgroundColor: "#C8A97A", color: "#1C1A16" }}
+            >
+              Réserver un appel →
+            </a>
+            <p style={{ color: "#F5EFE4" }} className="text-sm">
+              Appel de reconstruction de 60 min
+            </p>
           </div>
         </div>
       </div>
