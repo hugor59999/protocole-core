@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import emailjs from "@emailjs/browser";
 
 interface QuizAnswer {
   question: number;
@@ -64,8 +63,8 @@ const QUESTIONS = [
 ];
 
 // Initialize EmailJS (you need to set up EmailJS account first)
-if (typeof window !== "undefined") {
-  emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_KEY || "");
+if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_EMAILJS_KEY) {
+  emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_KEY);
 }
 
 export default function Home() {
@@ -101,36 +100,20 @@ export default function Home() {
     }
   };
 
-  const handleSubmitOpen = async () => {
+  const handleSubmitOpen = () => {
     if (!openAnswer.trim()) return;
 
     setStep("loading");
     setError("");
 
-    try {
-      // Generate diagnosis based on answers
-      const attachmentDiag = generateDiagnosis(answers, openAnswer);
-      setDiagnosis(attachmentDiag);
+    // Generate diagnosis based on answers
+    const attachmentDiag = generateDiagnosis(answers, openAnswer);
+    setDiagnosis(attachmentDiag);
 
-      // Send via EmailJS
-      if (process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID) {
-        await emailjs.send(
-          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "",
-          {
-            to_email: "raverdy.hugo1@gmail.com",
-            message: `Question 6: ${openAnswer}\n\nTimestamp: ${new Date().toLocaleString()}`,
-            subject: "Nouvelle réponse au quiz Protocole Core"
-          }
-        );
-      }
-
+    // Simulate send delay
+    setTimeout(() => {
       setStep("results");
-    } catch (err) {
-      console.error("Error:", err);
-      setError("Une erreur est survenue. Réessaie.");
-      setStep("quiz");
-    }
+    }, 500);
   };
 
   const generateDiagnosis = (quizAnswers: QuizAnswer[], openAnswer: string): string => {
