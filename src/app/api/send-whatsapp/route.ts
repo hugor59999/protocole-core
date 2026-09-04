@@ -57,8 +57,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Log the message send
+    // Log the message send and store the number
     console.log(`[WhatsApp] Diagnostic sent to ${toNumber}`, data.sid);
+
+    // Store the lead with WhatsApp number (for follow-up)
+    try {
+      await fetch("/api/store-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          whatsapp: toNumber,
+          messageSid: data.sid,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+    } catch (storageError) {
+      console.error("Error storing lead:", storageError);
+      // Don't fail if storage fails - message was sent
+    }
 
     return NextResponse.json({
       success: true,
