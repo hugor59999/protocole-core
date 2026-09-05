@@ -7,7 +7,7 @@ interface QuizAnswer {
   answer: string;
 }
 
-type Step = "landing" | "quiz" | "whatsapp" | "loading" | "sent";
+type Step = "landing" | "quiz" | "contact" | "loading" | "diagnosis";
 
 const QUESTIONS = [
   {
@@ -67,9 +67,11 @@ export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [openAnswer, setOpenAnswer] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [error, setError] = useState("");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [diagnosis, setDiagnosis] = useState("");
 
   const handleSelectAnswer = (index: number) => {
     setSelectedIndex(index);
@@ -98,12 +100,12 @@ export default function Home() {
 
   const handleSubmitOpen = async () => {
     if (!openAnswer.trim()) return;
-    setStep("whatsapp");
+    setStep("contact");
   };
 
-  const handleSendWhatsApp = async () => {
-    if (!whatsapp.trim()) {
-      setError("Le numéro WhatsApp est obligatoire pour recevoir ton diagnostic");
+  const handleSaveContact = async () => {
+    if (!firstName.trim() || !whatsapp.trim()) {
+      setError("Le prénom et le numéro WhatsApp sont obligatoires");
       return;
     }
 
@@ -112,25 +114,27 @@ export default function Home() {
 
     try {
       // Generate diagnosis
-      const diagnosis = generateDiagnosis(answers, openAnswer);
+      const generatedDiagnosis = generateDiagnosis(answers, openAnswer);
+      setDiagnosis(generatedDiagnosis);
 
-      // Send via WhatsApp API
-      const response = await fetch("/api/send-whatsapp", {
+      // Save lead to database
+      const response = await fetch("/api/store-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          firstName: firstName.trim(),
           whatsapp: whatsapp.trim(),
-          diagnosis: diagnosis
+          timestamp: new Date().toISOString()
         })
       });
 
-      if (!response.ok) throw new Error("Failed to send WhatsApp");
+      if (!response.ok) throw new Error("Failed to save lead");
 
-      setStep("sent");
+      setStep("diagnosis");
     } catch (err) {
       console.error("Error:", err);
-      setError("Erreur lors de l'envoi du diagnostic. Réessaie.");
-      setStep("whatsapp");
+      setError("Erreur lors de la sauvegarde. Réessaie.");
+      setStep("contact");
     }
   };
 
@@ -343,21 +347,32 @@ Sors du pilote automatique.`;
     );
   }
 
-  // WhatsApp collection page
-  if (step === "whatsapp") {
+  // Contact collection page (firstName + WhatsApp)
+  if (step === "contact") {
     return (
       <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: "#1C1A16" }}>
         <div className="max-w-md w-full text-center space-y-8">
           <div className="space-y-4">
             <h2 className="text-3xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
-              Reçois ton diagnostic par WhatsApp
+              On y est presque !
             </h2>
             <p style={{ color: "#F5EFE4" }}>
-              Entre ton numéro WhatsApp pour recevoir ton diagnostic complet. Assure-toi de bien entrer le bon numéro sinon tu ne recevras rien.
+              Rentre tes informations pour accéder à ton diagnostic complet.
             </p>
           </div>
 
           <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Ton prénom"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full p-4 rounded-lg focus:outline-none"
+              style={{
+                backgroundColor: "#3D5247",
+                color: "#F5EFE4"
+              }}
+            />
             <input
               type="tel"
               placeholder="+33612345678"
@@ -366,21 +381,20 @@ Sors du pilote automatique.`;
               className="w-full p-4 rounded-lg focus:outline-none"
               style={{
                 backgroundColor: "#3D5247",
-                color: "#F5EFE4",
-                borderColor: "#C8A97A"
+                color: "#F5EFE4"
               }}
             />
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <button
-              onClick={handleSendWhatsApp}
-              disabled={!whatsapp.trim()}
+              onClick={handleSaveContact}
+              disabled={!firstName.trim() || !whatsapp.trim()}
               className="w-full py-4 px-8 rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-50"
               style={{
-                backgroundColor: whatsapp.trim() ? "#C8A97A" : "#3D5247",
+                backgroundColor: (firstName.trim() && whatsapp.trim()) ? "#C8A97A" : "#3D5247",
                 color: "#1C1A16"
               }}
             >
-              Recevoir mon diagnostic →
+              Voir mon diagnostic →
             </button>
           </div>
         </div>
@@ -405,18 +419,27 @@ Sors du pilote automatique.`;
     );
   }
 
-  // Sent page
-  if (step === "sent") {
+  // Diagnosis page
+  if (step === "diagnosis") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: "#1C1A16" }}>
-        <div className="max-w-md w-full text-center space-y-8">
-          <div className="space-y-4">
+      <div className="min-h-screen flex flex-col px-6 py-8" style={{ backgroundColor: "#1C1A16" }}>
+        <div className="max-w-md w-full mx-auto flex-1 flex flex-col">
+          <div className="mb-8 space-y-4">
             <h2 className="text-3xl font-serif font-bold" style={{ color: "#F5EFE4" }}>
-              C'est en route ✓
+              Ton diagnostic, {firstName}
             </h2>
-            <p style={{ color: "#F5EFE4" }}>
-              Ton diagnostic complet arrive sur WhatsApp dans quelques instants.
-            </p>
+          </div>
+
+          <div
+            className="flex-1 p-6 rounded-lg mb-8 overflow-y-auto"
+            style={{
+              backgroundColor: "#3D5247",
+              color: "#F5EFE4",
+              whiteSpace: "pre-wrap",
+              wordWrap: "break-word"
+            }}
+          >
+            {diagnosis}
           </div>
 
           <div className="text-center space-y-4">
@@ -424,7 +447,7 @@ Sors du pilote automatique.`;
               href="https://calendly.com/hugo-rf/session-de-reconstruction-clone"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-10 py-4 rounded-lg font-semibold transition"
+              className="inline-block w-full px-10 py-4 rounded-lg font-semibold transition"
               style={{ backgroundColor: "#C8A97A", color: "#1C1A16" }}
             >
               Réserver un appel →

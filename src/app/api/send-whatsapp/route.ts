@@ -12,13 +12,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Using Twilio to send WhatsApp message
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+    // Using Meta WhatsApp Business API
+    const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID;
+    const accessToken = process.env.META_WHATSAPP_ACCESS_TOKEN;
 
-    if (!accountSid || !authToken || !fromNumber) {
-      console.error("Missing Twilio credentials");
+    if (!phoneNumberId || !accessToken) {
+      console.error("Missing Meta WhatsApp credentials");
       return NextResponse.json(
         { error: "WhatsApp service not configured" },
         { status: 500 }
@@ -26,31 +25,32 @@ export async function POST(req: NextRequest) {
     }
 
     // Format WhatsApp number (ensure it has country code)
-    const toNumber = whatsapp.startsWith("+") ? whatsapp : `+${whatsapp}`;
+    const toNumber = whatsapp.startsWith("+") ? whatsapp.replace("+", "") : whatsapp;
 
-    // Send via Twilio
+    // Send via Meta WhatsApp API
     const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      `https://graph.instagram.com/v18.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {
-          Authorization: `Basic ${Buffer.from(
-            `${accountSid}:${authToken}`
-          ).toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          From: `whatsapp:${fromNumber}`,
-          To: `whatsapp:${toNumber}`,
-          Body: diagnosis,
-        }).toString(),
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: toNumber,
+          type: "text",
+          text: {
+            body: diagnosis,
+          },
+        }),
       }
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Twilio error:", data);
+      console.error("Meta WhatsApp error:", data);
       return NextResponse.json(
         { error: "Failed to send WhatsApp message" },
         { status: 500 }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log the message send and store the number
-    console.log(`[WhatsApp] Diagnostic sent to ${toNumber}`, data.sid);
+    console.log(`[WhatsApp] Diagnostic sent to +${toNumber}`, data.messages?.[0]?.id);
 
     // Store the lead with WhatsApp number (for follow-up)
     try {
@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          whatsapp: toNumber,
-          messageSid: data.sid,
+          whatsapp: `+${toNumber}`,
+          messageSid: data.messages?.[0]?.id,
           timestamp: new Date().toISOString(),
         }),
       });
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      messageSid: data.sid,
+      messageSid: data.messages?.[0]?.id,
     });
   } catch (error) {
     console.error("WhatsApp send error:", error);
